@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'gui.h'
 **
-** Created: Mon Apr 30 22:52:56 2012
+** Created: Mon Apr 30 23:17:11 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_GUI[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -41,6 +41,7 @@ static const uint qt_meta_data_GUI[] = {
       84,    4,    4,    4, 0x08,
       93,    4,    4,    4, 0x08,
      108,    4,    4,    4, 0x08,
+     117,    4,    4,    4, 0x08,
 
        0        // eod
 };
@@ -49,7 +50,7 @@ static const char qt_meta_stringdata_GUI[] = {
     "GUI\0\0loadFile()\0setCulling()\0saveScene()\0"
     "loadScene()\0addLight()\0scale()\0"
     "translate()\0rotate()\0deleteObject()\0"
-    "render()\0"
+    "render()\0quit()\0"
 };
 
 void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -68,6 +69,7 @@ void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **
         case 7: _t->rotate(); break;
         case 8: _t->deleteObject(); break;
         case 9: _t->render(); break;
+        case 10: _t->quit(); break;
         default: ;
         }
     }
@@ -106,9 +108,9 @@ int GUI::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     return _id;
 }

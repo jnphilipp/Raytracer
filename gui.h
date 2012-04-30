@@ -28,6 +28,7 @@ class GUI : public QMainWindow
 		void rotate();
 		void deleteObject();
 		void render();
+		void quit();
 		
 	private:
 		//the scene to be rendered

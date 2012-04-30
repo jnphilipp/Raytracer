@@ -12,6 +12,7 @@ GUI::GUI()
  	file->addAction( "Import OBJ-File", this, SLOT(loadFile()), Qt::CTRL+Qt::Key_I );
 	file->addAction( "Load Scene", this, SLOT(loadScene()), Qt::CTRL+Qt::Key_L );
 	file->addAction( "Save Scene", this, SLOT(saveScene()), Qt::CTRL+Qt::Key_S );
+	file->addAction( "Quit", this, SLOT(quit()), Qt::Key_Q );
 
 	QMenu *options = new QMenu( QString("Edit"), this );
 	menuBar()->addMenu( options );
@@ -146,5 +147,6 @@ void GUI::render()
 		statusBar()->showMessage(tr("Loading aborted"));
 }
 
-
- 
+void GUI::quit() {
+	exit(0);
+} 
