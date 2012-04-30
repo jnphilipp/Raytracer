@@ -137,6 +137,18 @@ Raytracer::Raytracer( QString path )
 		t.normals[0]=normals[NormNr1];
 		t.normals[1]=normals[NormNr2];
 		t.normals[2]=normals[NormNr3];
+		t.normal = crossProduct(t.vertices[0]-t.vertices[1], t.vertices[0]-t.vertices[2]);
+		t.normal.normalize();
+
+		Vector b = t.vertices[1]-t.vertices[0];
+		Vector c = t.vertices[2]-t.vertices[0];
+		float d = (scalarProduct(c,c) * scalarProduct(b,b)) - (scalarProduct(c,b) * scalarProduct(b,c));
+
+		t.ubeta = (b * (scalarProduct(c, c) / d)) - (c * (scalarProduct(c, b) / d));
+		t.ugamma = (c * (scalarProduct(b, b) / d)) - (b * (scalarProduct(b, c) / d));
+		t.kbeta = scalarProduct(-t.vertices[0], t.ubeta);
+		t.kgamma = scalarProduct(-t.vertices[0], t.ugamma);
+
 		if (materials[matNr].isTexture)
 		{
 			t.texCoords[0]=tex_coords[TexCoordsNr1];
@@ -332,8 +344,57 @@ void Raytracer::genImage()
 
 }
 
-QColor Raytracer::raytrace(Vector start, Vector dir, int depth)
-{	
+QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
+	float dis = 0.0f;
+	int index = -1;
+
+	for ( int i = 0; i < triangles.size(); i++ ) {		
+		float t = scalarProduct((triangles[i].vertices[0] - start), triangles[i].normal) / scalarProduct(dir, triangles[i].normal);
+
+		if ( t < 0 )
+			continue;
+
+		Vector p = start + dir * t;
+		/*Vector a = p - triangles[i].vertices[0];
+		Vector b = triangles[i].vertices[1]-triangles[i].vertices[0];
+		Vector c = triangles[i].vertices[2]-triangles[i].vertices[0];*/
+
+		//float beta = ((scalarProduct(a, b) * scalarProduct(c, c)) - (scalarProduct(a,c) * scalarProduct(c,b))) / ((scalarProduct(c,c) * scalarProduct(b,b)) - (scalarProduct(c,b) * scalarProduct(b,c)));
+		float beta = scalarProduct(p, triangles[i].ubeta) + triangles[i].kbeta;
+
+		if ( beta < 0 )
+			continue;
+
+		//float gamma = ((scalarProduct(a, c) * scalarProduct(b, b)) - (scalarProduct(a,b) * scalarProduct(b,c))) / ((scalarProduct(c,c) * scalarProduct(b,b)) - (scalarProduct(c,b) * scalarProduct(b,c)));
+		float gamma = scalarProduct(p, triangles[i].ugamma) + triangles[i].kgamma;
+
+		if ( gamma < 0 )
+			continue;
+
+		if ( (beta + gamma) > 1 )
+			continue;
+
+
+		float tmp = (start - p).norm();
+		if ( tmp < dis || dis == 0 ) {
+			dis = tmp;
+			index = i;
+		}                                                                                   
+
+	}
+
+	if ( index == 0 )
+			return QColor(255,0,0);
+	else if ( index == 1 )
+		return QColor(0,255,0);
+	else if ( index == 2 )
+		return QColor(0,125,255);
+	else if ( index == 3 )
+		return QColor(0,255,125);
+	else if ( index == 4 )
+		return QColor(125,255,125);
+	else if ( index == 5 )
+		return QColor(125,0,125);
+
 	return backgroundColor;
 }
-

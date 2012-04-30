@@ -70,6 +70,11 @@ class Vector
 			return Vector( values[0] - v[0], values[1] - v[1], values[2] - v[2] );
 		}
 
+		Vector operator - ( ) const
+		{
+			return Vector( -values[0], -values[1], -values[2]);
+		}
+
 		Vector operator * ( const float& scalar ) const
 		{
 			return Vector( values[0]*scalar, values[1]*scalar, values[2]*scalar );
@@ -117,7 +122,9 @@ inline Vector crossProduct( Vector v1, Vector v2 )
 	return Vector(v1[1]*v2[2] - v2[1]*v1[2], v1[2]*v2[0] - v2[2]*v1[0], v1[0]*v2[1] - v2[0]*v1[1]);
 };
 
-
+inline float area(Vector a, Vector b, Vector c) {
+	return 0.5 * crossProduct((b-a), (c-a)).norm();
+}
 
 
 
@@ -179,8 +186,12 @@ struct Triangle //just to have all the informations of Material and
 	Vector vertices[3];
 	Vector normals[3];
 	Vector texCoords[3]; //only [0] and [1] are used to store texInformations
+	Vector normal;
+	Vector ubeta;
+	Vector ugamma;
+	float kbeta;
+	float kgamma;
 };
 
 
 #endif
- 
