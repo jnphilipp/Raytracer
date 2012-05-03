@@ -1,0 +1,61 @@
+			CGViewer 
+
+A simple raytracer.
+==================================================
+
+I.   Requirements
+II.  Compiling CGViwer
+III. Start CGViwer
+IV.  Troubleshooting
+V.   Help, Feedback & Bug Reports
+VI.	 Tasks
+VII.  About
+
+
+I.    Requirements
+==================================================
+The CGViewer is written in C++ and uses OpenGL and
+Qt. It also needs the GLEW-library.
+
+
+II.   Compiling CGViewer
+==================================================
+First run 'qmake' then 'make'. The 'qmake' is only
+required if the CGViewer.pro file is changed.
+
+
+III.  Start CGViewer
+==================================================
+Start the compiled file, CGViewer.
+
+
+IV.   Troubleshooting
+==================================================
+In need of help or for more information feel free
+to send a mail to jnphilipp@yahoo.com.
+
+
+V.    Help, Feedback & Bug Reports
+==================================================
+For Help, Feedback or Bug Reports, send a mail to
+jnphilipp@yahoo.com.
+
+
+V.    Tasks
+==================================================
+In the module "Computergrafik" I recently joined,
+I have to write a raytracer. We had given a simple
+user interface, in which you can load models, to
+create a scene, save this scene. The task is to
+write the raytracing function.
+
+The first task is to write the intersection and
+give every triangle a specific color. Then to
+optimize the intersection by dividing the image
+into parts an add the triangle to these parts.
+
+
+VII.   About
+==================================================
+Content is (C) 2012 J. N. Philipp
+Website: https://jnphilipp.dyndns.org
