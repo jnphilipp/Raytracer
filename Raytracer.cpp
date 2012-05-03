@@ -345,27 +345,25 @@ void Raytracer::genImage()
 }
 
 QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
-	float dis = 0.0f;
+	float dis = -1;
 	int index = -1;
 
-	for ( int i = 0; i < triangles.size(); i++ ) {		
+	for ( int i = 0; i < triangles.size(); i++ ) {
+		if ( scalarProduct(dir, triangles[i].normal) == 0 )
+				continue;
+		
 		float t = scalarProduct((triangles[i].vertices[0] - start), triangles[i].normal) / scalarProduct(dir, triangles[i].normal);
 
 		if ( t < 0 )
 			continue;
 
 		Vector p = start + dir * t;
-		/*Vector a = p - triangles[i].vertices[0];
-		Vector b = triangles[i].vertices[1]-triangles[i].vertices[0];
-		Vector c = triangles[i].vertices[2]-triangles[i].vertices[0];*/
 
-		//float beta = ((scalarProduct(a, b) * scalarProduct(c, c)) - (scalarProduct(a,c) * scalarProduct(c,b))) / ((scalarProduct(c,c) * scalarProduct(b,b)) - (scalarProduct(c,b) * scalarProduct(b,c)));
 		float beta = scalarProduct(p, triangles[i].ubeta) + triangles[i].kbeta;
 
 		if ( beta < 0 )
 			continue;
 
-		//float gamma = ((scalarProduct(a, c) * scalarProduct(b, b)) - (scalarProduct(a,b) * scalarProduct(b,c))) / ((scalarProduct(c,c) * scalarProduct(b,b)) - (scalarProduct(c,b) * scalarProduct(b,c)));
 		float gamma = scalarProduct(p, triangles[i].ugamma) + triangles[i].kgamma;
 
 		if ( gamma < 0 )
@@ -376,12 +374,15 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 
 
 		float tmp = (start - p).norm();
-		if ( tmp < dis || dis == 0 ) {
+		if ( tmp < dis || dis == -1 ) {
 			dis = tmp;
 			index = i;
 		}                                                                                   
 
 	}
+
+	if ( triangles.size() != 6 && dis != -1 )
+		return QColor((int)(index*dis)%256, index%256, (int)(index * index) %256);
 
 	if ( index == 0 )
 			return QColor(255,0,0);
@@ -392,7 +393,7 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	else if ( index == 3 )
 		return QColor(0,255,125);
 	else if ( index == 4 )
-		return QColor(125,255,125);
+		return QColor(125,125,79);
 	else if ( index == 5 )
 		return QColor(125,0,125);
 

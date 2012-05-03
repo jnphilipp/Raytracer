@@ -122,10 +122,6 @@ inline Vector crossProduct( Vector v1, Vector v2 )
 	return Vector(v1[1]*v2[2] - v2[1]*v1[2], v1[2]*v2[0] - v2[2]*v1[0], v1[0]*v2[1] - v2[0]*v1[1]);
 };
 
-inline float area(Vector a, Vector b, Vector c) {
-	return 0.5 * crossProduct((b-a), (c-a)).norm();
-}
-
 
 
 struct Texture
