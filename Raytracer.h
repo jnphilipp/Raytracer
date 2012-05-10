@@ -6,13 +6,14 @@
 #include <GL/glext.h>
 #include <QtOpenGL>
 #include <vector>
+#include <cfloat>
 
 #include "CGMath.h"
+#include "Octree.h"
 
 #define MAX_DEPTH 4
 
-class Raytracer : public QGLWidget
-{
+class Raytracer : public QGLWidget {
 	Q_OBJECT
 		public:
 			Raytracer( QString file );
@@ -27,10 +28,12 @@ class Raytracer : public QGLWidget
 		private:
 			void init();
 			bool initShaders();
+			void close();
 			QColor raytrace(Vector r, Vector e, int depth);
 
 			std::vector<Triangle> triangles; //the triangles in the Scene
 			std::vector<Lightsource> lights; //the lights in the scene
+			Octree *octree;
 
 			QImage *image;
 			QImage finalImage;			

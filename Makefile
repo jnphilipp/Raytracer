@@ -55,7 +55,8 @@ SOURCES       = main.cpp \
 		moc/moc_Scene.cpp \
 		moc/moc_EditWidgets.cpp \
 		moc/moc_SaveSceneDialog.cpp \
-		moc/moc_Raytracer.cpp
+		moc/moc_Raytracer.cpp \
+		Octree.cpp
 OBJECTS       = obj/main.o \
 		obj/gui.o \
 		obj/Matrix.o \
@@ -69,7 +70,8 @@ OBJECTS       = obj/main.o \
 		obj/moc_Scene.o \
 		obj/moc_EditWidgets.o \
 		obj/moc_SaveSceneDialog.o \
-		obj/moc_Raytracer.o
+		obj/moc_Raytracer.o \
+		obj/Octree.o
 DIST          = /usr/share/qt4/mkspecs/common/unix.conf \
 		/usr/share/qt4/mkspecs/common/linux.conf \
 		/usr/share/qt4/mkspecs/common/gcc-base.conf \
@@ -284,7 +286,7 @@ obj/gui.o: gui.cpp Raytracer.h \
 		Matrix.h \
 		Light.h \
 		EditWidgets.h \
-		SaveSceneDialog.h
+		SaveSceneDialog.h 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/gui.o gui.cpp
 
 obj/Matrix.o: Matrix.cpp Matrix.h \
@@ -321,7 +323,8 @@ obj/SaveSceneDialog.o: SaveSceneDialog.cpp SaveSceneDialog.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/SaveSceneDialog.o SaveSceneDialog.cpp
 
 obj/Raytracer.o: Raytracer.cpp Raytracer.h \
-		CGMath.h
+		CGMath.h \
+		Octree.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/Raytracer.o Raytracer.cpp
 
 obj/moc_gui.o: moc/moc_gui.cpp 
@@ -338,6 +341,10 @@ obj/moc_SaveSceneDialog.o: moc/moc_SaveSceneDialog.cpp
 
 obj/moc_Raytracer.o: moc/moc_Raytracer.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/moc_Raytracer.o moc/moc_Raytracer.cpp
+
+obj/Octree.o: Octree.cpp Octree.h \
+	CGMath.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/Octree.o Octree.cpp
 
 ####### Install
 

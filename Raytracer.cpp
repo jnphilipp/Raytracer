@@ -3,10 +3,13 @@
 #include <omp.h>
 
 #include <iostream>
+#include <QShortcut>
 using namespace std;
 
-Raytracer::Raytracer( QString path )
-{
+Raytracer::Raytracer( QString path ) {
+	QShortcut *shortcut = new QShortcut(QKeySequence(Qt::CTRL+Qt::Key_Q), this);
+	QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(close()));
+
 	superSamplingRate = 1; //TODO: setting this to 1 and enabling on the fly output will cause a crash
 	//read file and init everything
 
@@ -47,8 +50,7 @@ Raytracer::Raytracer( QString path )
 	image->fill(qRgb(255,255,255));	
 
 	//0.75 read the lights
-	for (int i=0;i<nLights;++i)
-	{
+	for (int i=0;i<nLights;++i) {
 		Lightsource l;		
 		file>>tx>>ty>>tz;
 		l.position = Vector(tx,ty,tz);
@@ -60,8 +62,7 @@ Raytracer::Raytracer( QString path )
 	}
 
 	//1. Materials->Meshes
-	for (int i=0;i<nMat;++i)
-	{
+	for ( int i = 0; i < nMat; ++i ) {
 		Material mat;
 		float r,g,b,shininess,alpha,sharpness,density;
 		int isTexture;
@@ -125,8 +126,8 @@ Raytracer::Raytracer( QString path )
 		tex_coords.push_back(Vector(u,v,1.0));
 	}
 	//4.Fill faces /Triangles
-	for (int i=0;i<nFaces;++i)
-	{
+	float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX, maxx = FLT_MIN, maxy = FLT_MIN, maxz = FLT_MIN;
+	for ( int i = 0; i < nFaces; ++i ) {
 		int matNr,vertNr1,vertNr2,vertNr3,NormNr1,NormNr2,NormNr3,TexCoordsNr1,TexCoordsNr2,TexCoordsNr3;
 		file>>matNr>>vertNr1>>vertNr2>>vertNr3>>NormNr1>>NormNr2>>NormNr3>>TexCoordsNr1>>TexCoordsNr2>>TexCoordsNr3;
 		Triangle t;
@@ -149,8 +150,49 @@ Raytracer::Raytracer( QString path )
 		t.kbeta = scalarProduct(-t.vertices[0], t.ubeta);
 		t.kgamma = scalarProduct(-t.vertices[0], t.ugamma);
 
-		if (materials[matNr].isTexture)
-		{
+		//Punkt 1
+		if ( minx > t.vertices[0].getValues()[0] )
+			minx = t.vertices[0].getValues()[0];
+		if ( miny > t.vertices[0].getValues()[1] )
+			miny = t.vertices[0].getValues()[1];
+		if ( minz > t.vertices[0].getValues()[2] )
+			minz = t.vertices[0].getValues()[2];
+		if ( maxx < t.vertices[0].getValues()[0] )
+			maxx = t.vertices[0].getValues()[0];
+		if ( maxy < t.vertices[0].getValues()[1] )
+			maxy = t.vertices[0].getValues()[1];
+		if ( maxz < t.vertices[0].getValues()[2] )
+			maxz = t.vertices[0].getValues()[2];
+
+		//Punkt 2
+		if ( minx > t.vertices[1].getValues()[0] )
+			minx = t.vertices[1].getValues()[0];
+		if ( miny > t.vertices[1].getValues()[1] )
+			miny = t.vertices[1].getValues()[1];
+		if ( minz > t.vertices[1].getValues()[2] )
+			minz = t.vertices[1].getValues()[2];
+		if ( maxx < t.vertices[1].getValues()[0] )
+			maxx = t.vertices[1].getValues()[0];
+		if ( maxy < t.vertices[1].getValues()[1] )
+			maxy = t.vertices[1].getValues()[1];
+		if ( maxz < t.vertices[1].getValues()[2] )
+			maxz = t.vertices[1].getValues()[2];
+
+		//Punkt 3
+		if ( minx > t.vertices[2].getValues()[0] )
+			minx = t.vertices[2].getValues()[0];
+		if ( miny > t.vertices[2].getValues()[1] )
+			miny = t.vertices[2].getValues()[1];
+		if ( minz > t.vertices[2].getValues()[2] )
+			minz = t.vertices[2].getValues()[2];
+		if ( maxx < t.vertices[2].getValues()[0] )
+			maxx = t.vertices[2].getValues()[0];
+		if ( maxy < t.vertices[2].getValues()[1] )
+			maxy = t.vertices[2].getValues()[1];
+		if ( maxz < t.vertices[2].getValues()[2] )
+			maxz = t.vertices[2].getValues()[2];
+
+		if (materials[matNr].isTexture) {
 			t.texCoords[0]=tex_coords[TexCoordsNr1];
 			t.texCoords[1]=tex_coords[TexCoordsNr2];
 			t.texCoords[2]=tex_coords[TexCoordsNr3];
@@ -158,8 +200,12 @@ Raytracer::Raytracer( QString path )
 
 		triangles.push_back(t);
 	}
-	cout<<"Got "<<triangles.size()<<" Triangles\n";
+	cout << "Got "<< triangles.size() << " Triangles\n";
 
+	//kd-tree
+	cout << "Setting up octree.\n";
+	octree = new Octree();
+	octree->build(&triangles, minx, miny, minz, maxx, maxy, maxz);
 }
 
 void Raytracer::init()
@@ -270,6 +316,10 @@ void Raytracer::paintGL()
 	glCallList(displayList);
 }
 
+void Raytracer::close() {
+	setVisible(false);
+}
+
 void Raytracer::genImage()
 {
 	QTime t;
@@ -349,10 +399,11 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	int index = -1;
 
 	for ( int i = 0; i < triangles.size(); i++ ) {
-		if ( scalarProduct(dir, triangles[i].normal) == 0 )
-				continue;
+	float d;
+		if ( (d = scalarProduct(dir, triangles[i].normal)) == 0 )
+			continue;
 		
-		float t = scalarProduct((triangles[i].vertices[0] - start), triangles[i].normal) / scalarProduct(dir, triangles[i].normal);
+		float t = scalarProduct((triangles[i].vertices[0] - start), triangles[i].normal) / d;
 
 		if ( t < 0 )
 			continue;

@@ -10,27 +10,22 @@
 #include <QtOpenGL>
 
 
-class Vector
-{
+class Vector {
 	public:
-		Vector()
-		{
+		Vector() {
 			values[0] = values[1] = values[2] = 0.0;
-  			values[3] = 1.0;
+			values[3] = 1.0;
 		}
 
 		//this constructor is useful to init texture coords (which are 2D)
-		Vector(float x, float y, float z=0, float w=1.0)
-		{
+		Vector(float x, float y, float z=0, float w=1.0) {
 			values[0] = x;
 			values[1] = y;
 			values[2] = z;
 			values[3] = w;
 		}
 
-		
-		float& operator () (size_t i)
-		{
+		float& operator () (size_t i) {
 			return values[i];
 		}
 
@@ -49,13 +44,11 @@ class Vector
 			return values[i];
 		}
 
-		void setValue(int index, float value)
-		{
+		void setValue(int index, float value) {
 			values[index] = value;
 		}
 
-		Vector& operator = ( const Vector& v ) 
-		{
+		Vector& operator = ( const Vector& v ) {
 			memcpy(values, v.values, 4*sizeof(float));
   			return *this;
 		}
@@ -75,8 +68,7 @@ class Vector
 			return Vector( -values[0], -values[1], -values[2]);
 		}
 
-		Vector operator * ( const float& scalar ) const
-		{
+		Vector operator * ( const float& scalar ) const {
 			return Vector( values[0]*scalar, values[1]*scalar, values[2]*scalar );
 		}
 
@@ -121,8 +113,6 @@ inline Vector crossProduct( Vector v1, Vector v2 )
 {
 	return Vector(v1[1]*v2[2] - v2[1]*v1[2], v1[2]*v2[0] - v2[2]*v1[0], v1[0]*v2[1] - v2[0]*v1[1]);
 };
-
-
 
 struct Texture
 {
@@ -187,6 +177,36 @@ struct Triangle //just to have all the informations of Material and
 	Vector ugamma;
 	float kbeta;
 	float kgamma;
+};
+
+
+inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
+	float d;
+	if ( (d = scalarProduct(*dir, (*triangle).normal)) != 0  ) {
+		float t = scalarProduct(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
+
+		if ( t < 0 || t > 1 )
+			return false;
+
+		Vector p_temp = *start + *dir * t;
+		float beta = scalarProduct(p_temp, (*triangle).ubeta) + (*triangle).kbeta;
+
+		if ( beta < 0 )
+			return false;
+
+		float gamma = scalarProduct(p_temp, (*triangle).ugamma) + (*triangle).kgamma;
+
+		if ( gamma < 0 )
+			return false;
+
+		if ( (beta + gamma) > 1 )
+			return false;
+
+		(*p) = p_temp;
+		return true;
+	}
+
+	return false;
 };
 
 

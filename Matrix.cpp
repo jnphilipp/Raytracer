@@ -15,6 +15,23 @@ Matrix::Matrix()
 	values[12] = values[13] = values[14] = 0.0;
 }
 
+Matrix::Matrix(Vector *v1, Vector *v2, Vector *v3) {
+	values[15] = 1.0;
+	values[3] = values[7] = values[11] = values[12] = values[13] = values[14] = 0.0f;
+
+	values[0] = v1->getValues()[0];
+	values[4] = v1->getValues()[1];
+	values[8] = v1->getValues()[2];
+
+	values[1] = v2->getValues()[0];
+	values[5] = v2->getValues()[1];
+	values[9] = v2->getValues()[2];
+
+	values[2] = v3->getValues()[0];
+	values[6] = v3->getValues()[1];
+	values[10] = v3->getValues()[2];
+}
+
 void Matrix::transpose()
 {
 	float temp[16];

@@ -26,6 +26,8 @@ class Matrix
 		* \param values Values to be assigned to the matrix.
 		*/
 		Matrix( double *values );
+
+		Matrix(Vector *v1, Vector *v2, Vector *v3);
 		
 		/*! \brief Return a reference to the entries of the matrix. */
 		const float* getValues() const;
@@ -97,7 +99,7 @@ class Matrix
 		/*! \brief Method telling how a matrix is represented in output.*/
 		void write( std::ostream& out ) const;
 		
-	private:
+//	private:
 		
 		float Determinant4f();
 };

@@ -26,7 +26,7 @@ GUI::GUI()
 
 	QMenu *render = new QMenu( QString("Render"), this );
 	menuBar()->addMenu( render );
-	render->addAction( "Render Saved Scene", this, SLOT(render()));
+	render->addAction( "Render Saved Scene", this, SLOT(render()), Qt::Key_R);
 
 	//only for now
 	//useShaders=false;
