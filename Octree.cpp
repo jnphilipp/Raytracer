@@ -1,7 +1,5 @@
 #include "Octree.h"
 
-//using namespace std;
-
 Octree::Octree() {
 	normx = Vector(1.0f, 0.0f, 0.0f);
 	normy = Vector(0.0f, 1.0f, 0.0f);
@@ -15,40 +13,41 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	Vector vmaxy = Vector(0.0f, maxy, 0.0f);
 	Vector vminz = Vector(0.0f, 0.0f, minz);
 	Vector vmaxz = Vector(0.0f, 0.0f, maxz);
-	Vector middelx = Vector(minx + (maxx - minx)/2, 0.0f, 0.0f);
-	Vector middely = Vector(0.0f, miny + (maxy - miny)/2, 0.0f);
-	Vector middelz = Vector(0.0f, 0.0f, minz + (maxz - minz)/2);
+	Vector middlex = Vector(minx + (maxx - minx)/2, 0.0f, 0.0f);
+	Vector middley = Vector(0.0f, miny + (maxy - miny)/2, 0.0f);
+	Vector middlez = Vector(0.0f, 0.0f, minz + (maxz - minz)/2);
 	std::cout << "minx: " << minx << "\n";
 	std::cout << "maxx: " << maxy << "\n";
 	std::cout << "miny: " << miny << "\n";
 	std::cout << "maxy: " << maxy << "\n";
 	std::cout << "minz: " << minz << "\n";
 	std::cout << "maxz: " << maxz << "\n";
-	//std::cout << "middely: " << middely.getValues()[1] << "\n";
+	root = new SubVoxel(&vminx, &vminy, &vminz, &vmaxx, &vmaxy, &vmaxz, &middlex, &middley, &middlez);
+	//std::cout << "middley: " << middley.getValues()[1] << "\n";
 
-	//p = (dot(p1,n1)*cross(n2,n3)-dot(p2,n2)*cross(n1,n3)+dot(p3,n3)*cross(n1,n2))/d 
+	//p = (dot(p1,n1)*cross(n2,n3)-dot(p2,n2)*cross(n1,n3)+dot(p3,n3)*cross(n1,n2))/d
 	//miny
 	Vector v1 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
 	Vector v2 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
 	Vector v3 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
 	Vector v4 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-/*	Vector v5 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v6 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v7 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v8 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v9 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
+/*	Vector v5 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v6 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v7 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v8 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v9 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vminy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
 
 
 	//miny - maxy
-	/*Vector v10 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v11 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v12 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v13 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v14 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v15 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
-	Vector v16 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-/*	Vector v17 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v18 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middely, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
+	/*Vector v10 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v11 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v12 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v13 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v14 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v15 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
+	Vector v16 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+/*	Vector v17 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v18 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(middley, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
 
 
 	//maxy
@@ -56,11 +55,11 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	Vector v20 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
 	Vector v21 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
 	Vector v22 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-/*	Vector v23 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v24 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v25 = (crossProduct(normy, normz) * (scalarProduct(middelx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v26 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
-	Vector v27 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middelz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
+/*	Vector v23 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vminz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v24 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(vmaxz, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v25 = (crossProduct(normy, normz) * (scalarProduct(middlex, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v26 = (crossProduct(normy, normz) * (scalarProduct(vminx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();
+	Vector v27 = (crossProduct(normy, normz) * (scalarProduct(vmaxx, normx)) - (crossProduct(normx, normz) * scalarProduct(vmaxy, normy)) + (crossProduct(normx, normy) * scalarProduct(middlez, normz))) / Matrix(&normx, &normy, &normz).Determinant4f();*/
 
 
 	std::cout << "x: " << v1.getValues()[0] << "\ty: " << v1.getValues()[1] << "\tz: " << v1.getValues()[2] << "\n";
@@ -93,27 +92,69 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	std::cout << "x: " << v26.getValues()[0] << "\ty: " << v26.getValues()[1] << "\tz: " << v26.getValues()[2] << "\n";
 	std::cout << "x: " << v27.getValues()[0] << "\ty: " << v27.getValues()[1] << "\tz: " << v27.getValues()[2] << "\n";*/
 
+	std::map<int, int> vp;
+	std::map<int, int>::iterator it;
+	getVoxelsP(&v1, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v1: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v2, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v2: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v3, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v3: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v4, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v4: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v19, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v19: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v20, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v20: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v21, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v21: " << it->first << "\n";
+	vp.clear();
+
+	getVoxelsP(&v22, &middlex, &middley, &middlez, &vp);
+	for ( it = vp.begin(); it != vp.end(); it++ )
+		std::cout << "v22: " << it->first << "\n";
+
+
 	for ( int i = 0; i < triangles->size(); i++ ) {
 		std::map<int, int> voxels;
-		//std::cout << "1: " << scalarProduct(((*triangles)[i].vertices[0] - middely), normy) << "\n";
-		//std::cout << "2: " << scalarProduct(((*triangles)[i].vertices[1] - middely), normy) << "\n";
-		//std::cout << "3: " << scalarProduct(((*triangles)[i].vertices[2] - middely), normy) << "\n";
+		//std::cout << "1: " << scalarProduct(((*triangles)[i].vertices[0] - middley), normy) << "\n";
+		//std::cout << "2: " << scalarProduct(((*triangles)[i].vertices[1] - middley), normy) << "\n";
+		//std::cout << "3: " << scalarProduct(((*triangles)[i].vertices[2] - middley), normy) << "\n";
 
-		/*float x0 =  scalarProduct(((*triangles)[i].vertices[0] - middelx), normx);
-		float y0 =  scalarProduct(((*triangles)[i].vertices[0] - middely), normy);
-		float z0 =  scalarProduct(((*triangles)[i].vertices[0] - middelz), normz);*/
+		/*float x0 =  scalarProduct(((*triangles)[i].vertices[0] - middlex), normx);
+		float y0 =  scalarProduct(((*triangles)[i].vertices[0] - middley), normy);
+		float z0 =  scalarProduct(((*triangles)[i].vertices[0] - middlez), normz);*/
 
-		getVoxelsP(&(*triangles)[i].vertices[0], &middelx, &middely, &middelz, &voxels);
-		getVoxelsP(&(*triangles)[i].vertices[1], &middelx, &middely, &middelz, &voxels);
-		getVoxelsP(&(*triangles)[i].vertices[2], &middelx, &middely, &middelz, &voxels);
-		
-		/*float x1 =  scalarProduct(((*triangles)[i].vertices[1] - middelx), normx);
-		float y1 =  scalarProduct(((*triangles)[i].vertices[1] - middely), normy);
-		float z1 =  scalarProduct(((*triangles)[i].vertices[1] - middelz), normz);
-		
-		float x2 =  scalarProduct(((*triangles)[i].vertices[2] - middelx), normx);
-		float y2 =  scalarProduct(((*triangles)[i].vertices[2] - middely), normy);
-		float z2 =  scalarProduct(((*triangles)[i].vertices[2] - middelz), normz);*/
+		getVoxelsP(&(*triangles)[i].vertices[0], &middlex, &middley, &middlez, &voxels);
+		getVoxelsP(&(*triangles)[i].vertices[1], &middlex, &middley, &middlez, &voxels);
+		getVoxelsP(&(*triangles)[i].vertices[2], &middlex, &middley, &middlez, &voxels);
+
+		/*float x1 =  scalarProduct(((*triangles)[i].vertices[1] - middlex), normx);
+		float y1 =  scalarProduct(((*triangles)[i].vertices[1] - middley), normy);
+		float z1 =  scalarProduct(((*triangles)[i].vertices[1] - middlez), normz);
+
+		float x2 =  scalarProduct(((*triangles)[i].vertices[2] - middlex), normx);
+		float y2 =  scalarProduct(((*triangles)[i].vertices[2] - middley), normy);
+		float z2 =  scalarProduct(((*triangles)[i].vertices[2] - middlez), normz);*/
 
 
 		/*if ( x0 <= 0 && y0 <= 0 && z0 <= 0 )
@@ -178,22 +219,22 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 		//float d = 0.0f;
 
 
-//float x0 =  scalarProduct(((*triangles)[i].vertices[0] - middelx), normx);
-//float y0 =  scalarProduct(((*triangles)[i].vertices[0] - middely), normy);
-//float z0 =  scalarProduct(((*triangles)[i].vertices[0] - middelz), normz);
+//float x0 =  scalarProduct(((*triangles)[i].vertices[0] - middlex), normx);
+//float y0 =  scalarProduct(((*triangles)[i].vertices[0] - middley), normy);
+//float z0 =  scalarProduct(((*triangles)[i].vertices[0] - middlez), normz);
 
 
 
 //getVoxelsL(Vector *start, Vector *dir, Vector *p1, Vector *norm1, Vector *p2, Vector *norm2, Vector *p3, Vector *norm3, map<int, int> *voxels)
-		getVoxelsLx(&(*triangles)[i].vertices[0], &a, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLx(&(*triangles)[i].vertices[0], &b, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLx(&(*triangles)[i].vertices[2], &c, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLy(&(*triangles)[i].vertices[0], &a, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLy(&(*triangles)[i].vertices[0], &b, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLy(&(*triangles)[i].vertices[2], &c, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLz(&(*triangles)[i].vertices[0], &a, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLz(&(*triangles)[i].vertices[0], &b, &middelx, &middely, &middelz, &voxels);
-		getVoxelsLz(&(*triangles)[i].vertices[2], &c, &middelx, &middely, &middelz, &voxels);
+		getVoxelsLx(&(*triangles)[i].vertices[0], &a, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLx(&(*triangles)[i].vertices[0], &b, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLx(&(*triangles)[i].vertices[2], &c, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLy(&(*triangles)[i].vertices[0], &a, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLy(&(*triangles)[i].vertices[0], &b, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLy(&(*triangles)[i].vertices[2], &c, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLz(&(*triangles)[i].vertices[0], &a, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLz(&(*triangles)[i].vertices[0], &b, &middlex, &middley, &middlez, &voxels);
+		getVoxelsLz(&(*triangles)[i].vertices[2], &c, &middlex, &middley, &middlez, &voxels);
 
 
 std::cout << "2. voxels: " << voxels.size() << "\n";
@@ -206,108 +247,108 @@ cout << "\n";
 			switch ( j ) {
 				case 0: {
 					if ( (d = scalarProduct(a, normx)) != 0 ) {
-						x0 = scalarProduct((middelx - (*triangles)[i].vertices[0]), normx) / d;
+						x0 = scalarProduct((middlex - (*triangles)[i].vertices[0]), normx) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + a * x0;
 
-						y0 =  scalarProduct((p - middely), normy);
-						z0 =  scalarProduct((p - middelz), normz);
+						y0 =  scalarProduct((p - middley), normy);
+						z0 =  scalarProduct((p - middlez), normz);
 					}
 					else
 						continue;
 				} break;
 				case 1: {
 					if ( (d = scalarProduct(b, normx)) != 0 ) {
-						x0 = scalarProduct((middelx - (*triangles)[i].vertices[0]), normx) / d;
+						x0 = scalarProduct((middlex - (*triangles)[i].vertices[0]), normx) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + b * x0;
 
-						y0 =  scalarProduct((p - middely), normy);
-						z0 =  scalarProduct((p - middelz), normz);
+						y0 =  scalarProduct((p - middley), normy);
+						z0 =  scalarProduct((p - middlez), normz);
 				}
 				else
 					continue;
 				} break;
 				case 2: {
 					if ( (d = scalarProduct(c, normx)) != 0 ) {
-						x0 = scalarProduct((middelx - (*triangles)[i].vertices[2]), normx) / d;
+						x0 = scalarProduct((middlex - (*triangles)[i].vertices[2]), normx) / d;
 
 						Vector p = (*triangles)[i].vertices[2] + c * x0;
 
-						y0 =  scalarProduct((p - middely), normy);
-						z0 =  scalarProduct((p - middelz), normz);
+						y0 =  scalarProduct((p - middley), normy);
+						z0 =  scalarProduct((p - middlez), normz);
 					}
 					else
 						continue;
 				} break;
 				case 3: {
 					if ( (d = scalarProduct(a, normy)) != 0 ) {
-						y0 = scalarProduct((middely - (*triangles)[i].vertices[0]), normy) / d;
+						y0 = scalarProduct((middley - (*triangles)[i].vertices[0]), normy) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + a * y0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						z0 =  scalarProduct((p - middelz), normz);
+						x0 =  scalarProduct((p - middlex), normx);
+						z0 =  scalarProduct((p - middlez), normz);
 					}
 					else
 						continue;
 				} break;
 				case 4: {
 					if ( (d = scalarProduct(b, normy)) != 0 ) {
-						y0 = scalarProduct((middely - (*triangles)[i].vertices[0]), normy) / d;
+						y0 = scalarProduct((middley - (*triangles)[i].vertices[0]), normy) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + b * y0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						z0 =  scalarProduct((p - middelz), normz);
+						x0 =  scalarProduct((p - middlex), normx);
+						z0 =  scalarProduct((p - middlez), normz);
 					}
 					else
 						continue;
 				} break;
 				case 5: {
 					if ( (d = scalarProduct(c, normy)) != 0 ) {
-						y0 = scalarProduct((middely - (*triangles)[i].vertices[2]), normy) / d;
+						y0 = scalarProduct((middley - (*triangles)[i].vertices[2]), normy) / d;
 
 						Vector p = (*triangles)[i].vertices[2] + c * y0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						z0 =  scalarProduct((p - middelz), normz);
+						x0 =  scalarProduct((p - middlex), normx);
+						z0 =  scalarProduct((p - middlez), normz);
 					}
 					else
 						continue;
 				} break;
 				case 6: {
 					if ( (d = scalarProduct(a, normz)) != 0 ) {
-						z0 = scalarProduct((middelz - (*triangles)[i].vertices[0]), normz) / d;
+						z0 = scalarProduct((middlez - (*triangles)[i].vertices[0]), normz) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + a * z0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						y0 =  scalarProduct((p - middely), normy);
+						x0 =  scalarProduct((p - middlex), normx);
+						y0 =  scalarProduct((p - middley), normy);
 					}
 					else
 						continue;
 				} break;
 				case 7: {
 					if ( (d = scalarProduct(b, normz)) != 0 ) {
-						z0 = scalarProduct((middelz - (*triangles)[i].vertices[0]), normz) / d;
+						z0 = scalarProduct((middlez - (*triangles)[i].vertices[0]), normz) / d;
 
 						Vector p = (*triangles)[i].vertices[0] + b * z0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						y0 =  scalarProduct((p - middelz), normy);
+						x0 =  scalarProduct((p - middlex), normx);
+						y0 =  scalarProduct((p - middlez), normy);
 					}
 					else
 						continue;
 				} break;
 				case 8: {
 					if ( (d = scalarProduct(c, normz)) != 0 ) {
-						z0 = scalarProduct((middelz - (*triangles)[i].vertices[2]), normz) / d;
+						z0 = scalarProduct((middlez - (*triangles)[i].vertices[2]), normz) / d;
 
 						Vector p = (*triangles)[i].vertices[2] + c * z0;
 
-						x0 =  scalarProduct((p - middelx), normx);
-						y0 =  scalarProduct((p - middely), normy);
+						x0 =  scalarProduct((p - middlex), normx);
+						y0 =  scalarProduct((p - middley), normy);
 					}
 					else
 						continue;
@@ -336,28 +377,28 @@ cout << "\n";
 		std::cout << "2_. voxels: " << voxels.size() << "\n";*/
 
 		Vector dir = v16 - v1;
-		getVoxelsT(&((*triangles)[i]), &v1, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v1, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v2;
-		getVoxelsT(&((*triangles)[i]), &v2, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v2, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v3;
-		getVoxelsT(&((*triangles)[i]), &v3, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v3, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v4;
-		getVoxelsT(&((*triangles)[i]), &v4, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v4, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v19;
-		getVoxelsT(&((*triangles)[i]), &v19, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v19, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v20;
-		getVoxelsT(&((*triangles)[i]), &v20, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v20, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v21;
-		getVoxelsT(&((*triangles)[i]), &v21, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v21, &dir, &middlex, &middley, &middlez, &voxels);
 
 		dir = v16 - v22;
-		getVoxelsT(&((*triangles)[i]), &v22, &dir, &middelx, &middely, &middelz, &voxels);
+		getVoxelsT(&((*triangles)[i]), &v22, &dir, &middlex, &middley, &middlez, &voxels);
 
 		/*if ( (d = scalarProduct(v16 - v1, (*triangles)[i].normal)) != 0  ) {
 			Vector p;
@@ -366,7 +407,7 @@ cout << "\n";
 			//std::cout << "v1-t: " << t << "\n";
 			if ( c ) {
 				std::cout << "cut: (" << p[0] << ", " << p[1] << ", " << p[2] << ")\n";
-				getVoxelsP(&p, &middelx, &middely, &middelz, &voxels);
+				getVoxelsP(&p, &middlex, &middley, &middlez, &voxels);
 				std::cout << "voxels: " << voxels.size() << "\n";
 			}
 		}
@@ -414,6 +455,8 @@ cout << "\n";
 		}*/
 
 		std::cout << "3. voxels: " << voxels.size() << "\n";
+		for ( it = voxels.begin(); it != voxels.end(); it++ ) {
+		}
 }
 		/*std::cout << "\n\n";
 		if ( i == 0 || i == 1 )
@@ -447,6 +490,9 @@ void Octree::getVoxelsLx(Vector *start, Vector *dir, Vector *x, Vector *y, Vecto
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		float x0 = scalarProduct((*x - *start), normx) / d;
 
+		if ( x0 < 0 || x0 > 1 )
+			return;
+
 		Vector p = *start + *dir * x0;
 
 		float y0 =  scalarProduct((p - *y), normy);
@@ -461,6 +507,9 @@ void Octree::getVoxelsLy(Vector *start, Vector *dir, Vector *x, Vector *y, Vecto
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		float y0 = scalarProduct((*y - *start), normy) / d;
 
+		if ( y0 < 0 || y0 > 1 )
+			return;
+
 		Vector p = *start + *dir * y0;
 
 		float x0 =  scalarProduct((p - *x), normx);
@@ -474,6 +523,9 @@ void Octree::getVoxelsLz(Vector *start, Vector *dir, Vector *x, Vector *y, Vecto
 	float d;
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		float z0 = scalarProduct((*z - *start), normz) / d;
+
+		if ( z0 < 0 || z0 > 1 )
+			return;
 
 		Vector p = *start + *dir * z0;
 
@@ -496,18 +548,18 @@ void Octree::getVoxelsT(Triangle *triangle, Vector *start, Vector *dir, Vector *
 void Octree::getVoxels(float x0, float y0, float z0, std::map<int, int> *voxels) {
 	if ( x0 <= 0 && y0 <= 0 && z0 <= 0 )
 		(*voxels)[0] = 0;
-	if ( x0 <= 0 && y0 <= 0 && z0 >= 0 )
+	if ( x0 >= 0 && y0 <= 0 && z0 <= 0 )
 		(*voxels)[1] = 1;
 	if ( x0 <= 0 && y0 >= 0 && z0 <= 0 )
 		(*voxels)[2] = 2;
-	if ( x0 >= 0 && y0 <= 0 && z0 <= 0 )
-		(*voxels)[3] = 3;
-	if ( x0 >= 0 && y0 <= 0 && z0 >= 0 )
-		(*voxels)[4] = 4;
 	if ( x0 >= 0 && y0 >= 0 && z0 <= 0 )
+		(*voxels)[3] = 3;
+	if ( x0 <= 0 && y0 <= 0 && z0 >= 0 )
+		(*voxels)[4] = 4;
+	if ( x0 >= 0 && y0 <= 0 && z0 >= 0 )
 		(*voxels)[5] = 5;
-	if ( x0 >= 0 && y0 >= 0 && z0 >= 0 )
-		(*voxels)[6] = 6;
 	if ( x0 <= 0 && y0 >= 0 && z0 >= 0 )
+		(*voxels)[6] = 6;
+	if ( x0 >= 0 && y0 >= 0 && z0 >= 0 )
 		(*voxels)[7] = 7;
 }
