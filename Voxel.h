@@ -1,22 +1,31 @@
 #ifndef VOXEL_H
 #define VOXEL_H
 
-#include "MetaVoxel.h"
+#include <iostream>
 
-class Voxel : public MetaVoxel {
+//#include "MetaVoxel.h"
+#include "CGMath.h"
+
+class Voxel {
 	public:
-		//Voxel(Vector *minx, Vector *miny, Vector *minz, Vector *maxx, Vector *maxy, Vector *maxz);
-		Voxel(Vector *minx, Vector *miny, Vector *minz, Vector *maxx, Vector *maxy, Vector *maxz);// : MetaVoxel(minx, miny, minz, maxx, maxy, maxz);
-		void addTriangle(Triangle *triangle, int voxel);
+		Voxel(Vector *minx, Vector *miny, Vector *minz, Vector *maxx, Vector *maxy, Vector *maxz);
+		void addTriangle(Triangle *triangle);
 		int size();
+		bool cutVoxel(Vector *start, Vector *dir);
+		Triangle * getTriangle(int i) {
+			return triangles[i];
+		}
 
 	private:
-		/*Vector minx;
+		Vector minx;
 		Vector miny;
 		Vector minz;
 		Vector maxx;
 		Vector maxy;
-		Vector maxz;*/
+		Vector maxz;
+		//Vector normx;
+		//Vector normy;
+		//Vector normz;
 		std::vector<Triangle *> triangles;
 };
 

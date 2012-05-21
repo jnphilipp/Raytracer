@@ -185,7 +185,7 @@ inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 	if ( (d = scalarProduct(*dir, (*triangle).normal)) != 0  ) {
 		float t = scalarProduct(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
 
-		if ( t < 0 || t > 1 )
+		if ( t < 0 )
 			return false;
 
 		Vector p_temp = *start + *dir * t;

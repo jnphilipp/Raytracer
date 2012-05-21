@@ -28,7 +28,7 @@ Raytracer::Raytracer( QString path ) {
 
 	//0.5 read Raytracer-Properties
 	int width,height;
-	float tx,ty,tz;	
+	float tx,ty,tz;
 	file>>width;file>>height;
 	file>>tx; file>>ty; file>>tz;
 	camera = Vector(tx,ty,tz);
@@ -47,18 +47,18 @@ Raytracer::Raytracer( QString path ) {
 	ambientLight.setRgb(amb_r*255,amb_g*255,amb_b*255);
 
 	image = new QImage(width*superSamplingRate, height*superSamplingRate, QImage::Format_RGB32);
-	image->fill(qRgb(255,255,255));	
+	image->fill(qRgb(255,255,255));
 
 	//0.75 read the lights
 	for (int i=0;i<nLights;++i) {
-		Lightsource l;		
+		Lightsource l;
 		file>>tx>>ty>>tz;
 		l.position = Vector(tx,ty,tz);
 		file>>l.ambient[0]>>l.ambient[1]>>l.ambient[2];
 		file>>l.diffuse[0]>>l.diffuse[1]>>l.diffuse[2];
 		file>>l.specular[0]>>l.specular[1]>>l.specular[2];
-		file>>l.constAtt>>l.linAtt>>l.quadAtt;		
-		lights.push_back(l);		
+		file>>l.constAtt>>l.linAtt>>l.quadAtt;
+		lights.push_back(l);
 	}
 
 	//1. Materials->Meshes
@@ -81,7 +81,7 @@ Raytracer::Raytracer( QString path ) {
 		file>>density;
 		mat.density=density;
 		mat.isTexture=false;
-		file>>isTexture;		
+		file>>isTexture;
 		if (isTexture == 1) //load texture
 		{
 			string texName;
@@ -98,7 +98,7 @@ Raytracer::Raytracer( QString path ) {
 				mat.isTexture = true;
 			}
 			else
-				QMessageBox::warning(this, tr("Texture Loader"), tr("Texture couldn't be loaded!"), QMessageBox::Ok);			
+				QMessageBox::warning(this, tr("Texture Loader"), tr("Texture couldn't be loaded!"), QMessageBox::Ok);
 		}
 		materials.push_back(mat);
 	}
@@ -205,15 +205,16 @@ Raytracer::Raytracer( QString path ) {
 	//kd-tree
 	cout << "Setting up octree.\n";
 	octree = new Octree();
-	octree->build(&triangles, minx, miny, minz, maxx, maxy, maxz);
+	//octree->build(&triangles, minx, miny, minz, maxx, maxy, maxz);
+	//cout << "octree size: " << octree->size() << "\n";
 }
 
 void Raytracer::init()
 {
-			
+
 	//draw the geometry into a texture and save the primary-Rays
 	GLubyte *renderedImage = new GLubyte[image->height()*image->width()*4];
-	
+
 	//TODO: implement a rotation angle
 	gluLookAt(camera[0], camera[1], camera[2], center[0], center[1], center[2], upVector[0], upVector[1], upVector[2]);
 	setGeometry(0,0,1024,768);
@@ -224,7 +225,7 @@ void Raytracer::init()
 	else
 		cout << "Succesfully initiated GLEW\n";
 
-	
+
 	//create DisplayList
 	displayList = glGenLists(1);
 	glNewList(displayList, GL_COMPILE);
@@ -234,7 +235,7 @@ void Raytracer::init()
 		float r = (float)(i % 255);
 		float g = (float)((i/255) % 255);
 		float b = (float)(((i/255)/255) % 255);
-		float a = (float)(((((i/255)/255))/255) % 255);	
+		float a = (float)(((((i/255)/255))/255) % 255);
 		glColor4f(r/255.0,g/255.0,b/255.0,a/255.0);
 		glBegin(GL_TRIANGLES);
 		glVertex3fv( triangles[i].vertices[0].getValues() );
@@ -244,7 +245,7 @@ void Raytracer::init()
 	}
 	glEndList();
 
-	
+
 	glGenTextures(1, &screenTexID);
 	glBindTexture(GL_TEXTURE_2D,screenTexID);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
@@ -257,26 +258,26 @@ void Raytracer::init()
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rboId);
 	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, image->width(), image->height());
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
-	
+
 	//GLuint fboId;
 	glGenFramebuffersEXT(1, &fboId);
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
 
 	// attach the texture to FBO color attachment point
 	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, screenTexID, 0);
 	// attach the renderbuffer to depth attachment point
 	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
-	
+
 	resizeGL(image->width(), image->height());
-	
-	paintGL();	
-	
+
+	paintGL();
+
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	
+
 	glBindTexture(GL_TEXTURE_2D, screenTexID);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)renderedImage);
 
-	
+
 	idx = new unsigned int[image->height()*image->width()];
 
 	for (int i=0; i<image->height()*image->width()*4; i+=4)
@@ -302,15 +303,15 @@ void Raytracer::initializeGL()
 	glClearColor((float)backgroundColor.red()/255.0, (float)backgroundColor.green()/255.0, (float)backgroundColor.blue()/255.0, 1.0);
 	//glClearColor(1.0, 1.0, 1.0, 0.0);
 	cout<<"Back_Color: "<<backgroundColor.red()/255.0<<", "<<(float)backgroundColor.green()/255.0<<", "<<(float)backgroundColor.blue()/255.0<<endl;
-	
+
 	glDepthFunc(GL_LEQUAL);							// Type Of Depth Testing
-	glEnable(GL_DEPTH_TEST);						// Enable Depth Testing	
+	glEnable(GL_DEPTH_TEST);						// Enable Depth Testing
 }
 
 
 void Raytracer::paintGL()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_COLOR_MATERIAL);
 	glCallList(displayList);
@@ -324,14 +325,14 @@ void Raytracer::genImage()
 {
 	QTime t;
 	t.start();
-	
+
 	init();
 
 	int count = 0;
 
 	unsigned int backgroundCode = backgroundColor.red() + backgroundColor.green()*255 + backgroundColor.blue()*255*255 + (unsigned int)((unsigned int)255*(unsigned int)255*(unsigned int)255*(unsigned int)255); //the alpha value of background is always set  to 1.0 (255)
 	cout<<"Back_Code: "<<backgroundCode<<endl;
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,fboId);
 	paintGL();
 	GLdouble mvMatrix[16];
 	GLdouble projMatrix[16];
@@ -349,12 +350,12 @@ void Raytracer::genImage()
 	w->resize(label->size());
 	w->setWindowTitle(QString("Rendered image"));
 	w->show();
-	
+
 
 //comment this line out to disable parallel computation - recommended for bug tracing
 #pragma omp parallel for schedule(dynamic, 1)
 	for (int j=0; j<image->height(); j+=1)
-	{	
+	{
 		for (int i=0; i<image->width(); i+=1)
 		{
 			unsigned int index = idx[j*image->width()+i];
@@ -362,9 +363,9 @@ void Raytracer::genImage()
 			gluUnProject( (float)i, (float)j, zValues[j*image->width()+i], mvMatrix, projMatrix, viewPort, &dX, &dY, &dZ );
 			Vector intersection(dX, dY, dZ);
 			Vector dir = intersection - camera;
-			
+
 			//!---------this is the call to the raytracing function------------!
-			QColor c = raytrace(camera, dir, MAX_DEPTH);                                				
+			QColor c = raytrace(camera, dir, MAX_DEPTH);
 			image->setPixel(i,image->height()-(j+1), QRgb(c.rgb()));
 
 		}
@@ -374,7 +375,7 @@ void Raytracer::genImage()
 			++count;
 			cout<<"\r----"<<(float)count/(float)image->height()*100.0<<"----";
 		}
-		
+
 		#pragma omp master
 		{
 			if (!(superSamplingRate <= 1.0) || omp_get_num_threads()==1)
@@ -395,45 +396,34 @@ void Raytracer::genImage()
 }
 
 QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
-	float dis = -1;
+	float dis = FLT_MAX;
+	Triangle triangle;
 	int index = -1;
 
 	for ( int i = 0; i < triangles.size(); i++ ) {
-	float d;
-		if ( (d = scalarProduct(dir, triangles[i].normal)) == 0 )
-			continue;
-		
-		float t = scalarProduct((triangles[i].vertices[0] - start), triangles[i].normal) / d;
-
-		if ( t < 0 )
-			continue;
-
-		Vector p = start + dir * t;
-
-		float beta = scalarProduct(p, triangles[i].ubeta) + triangles[i].kbeta;
-
-		if ( beta < 0 )
-			continue;
-
-		float gamma = scalarProduct(p, triangles[i].ugamma) + triangles[i].kgamma;
-
-		if ( gamma < 0 )
-			continue;
-
-		if ( (beta + gamma) > 1 )
-			continue;
-
-
-		float tmp = (start - p).norm();
-		if ( tmp < dis || dis == -1 ) {
-			dis = tmp;
-			index = i;
-		}                                                                                   
-
+		Vector p;
+		if ( cut(&start, &dir, &triangles[i], &p) ) {
+			float tmp = (start - p).norm();
+			if ( tmp < dis ) {
+				dis = tmp;
+				index = i;
+			}
+		}
 	}
 
-	if ( triangles.size() != 6 && dis != -1 )
-		return QColor((int)(index*dis)%256, index%256, (int)(index * index) %256);
+	/*for ( int i = 0; i < octree->size(); i++ ) {
+		if ( octree->cutVoxel(i, &start, &dir) ) {
+			/*Triangle tr;
+			float tmp = octree->cutTriangles(i, &start, &dir, &tr);
+			if ( tmp < dis ) {
+				dis = tmp;
+				triangle = tr;
+			}*
+		}
+	}*/
+
+	if ( dis != FLT_MAX )
+		return QColor((int)(index * 10)%256, index%256, (int)(index * index)%256);
 
 	if ( index == 0 )
 			return QColor(255,0,0);
