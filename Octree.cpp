@@ -27,7 +27,7 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	if ( triangles->size() > MAX_TRIANGLEs_PER_VOXEL ) {
 		std::vector<Triangle *> tri;
 
-		for ( int i = 0; i < triangles->size(); i++ ) {
+		for ( unsigned int i = 0; i < triangles->size(); i++ ) {
 			tri.push_back(&(*triangles)[i]);
 		}
 
@@ -35,7 +35,7 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	}
 	else {
 		voxels.push_back(new Voxel(&ldown, &rtop, &normx, &normy, &normz));
-		for ( int i = 0; i < triangles->size(); i++ ) {
+		for ( unsigned int i = 0; i < triangles->size(); i++ ) {
 			voxels[0]->addTriangle(&((*triangles)[i]));
 		}
 	}
@@ -77,7 +77,7 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 	vox.push_back(new Voxel(&middle, rtop, &normx, &normy, &normz));
 
 
-	for ( int i = 0; i < triangles->size(); i++ ) {
+	for ( unsigned int i = 0; i < triangles->size(); i++ ) {
 		std::map<int, int> mvoxels;
 		std::map<int, int>::iterator it;
 
@@ -128,13 +128,13 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 			vox[it->first]->addTriangle((*triangles)[i]);
 	}
 
-	for ( int i = 0; i < vox.size(); i++ ) {
+	for ( unsigned int i = 0; i < vox.size(); i++ ) {
 		if ( vox[i]->size() > MAX_TRIANGLEs_PER_VOXEL ) {
 			std::vector<Voxel *> tmp;
 
 			buildRec(vox[i]->getTriangles(), &tmp, vox[i]->getLdown(), vox[i]->getRtop());
 
-			for ( int j = 0; j < tmp.size(); j++ )
+			for ( unsigned int j = 0; j < tmp.size(); j++ )
 				voxels->push_back(tmp[j]);
 		}
 		else {
@@ -164,16 +164,17 @@ the start point of the ray. The intersected
 triangle and the distance will be returned.
 
 ################################################*/
-float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle) {
+float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 	float dis = FLT_MAX;
 
 	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
-		Vector p;
-		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &p) ) {
-			float tmp = (*start - p).norm();
+		Vector q;
+		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &q) ) {
+			float tmp = (*start - q).norm();
 			if ( tmp < dis ) {
 				dis = tmp;
 				triangle = voxels[voxel]->getTriangle(i);
+				*p = q;
 			}
 		}
 	}

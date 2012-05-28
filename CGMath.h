@@ -95,6 +95,12 @@ class Vector {
 			values[2] /= n;
 		}
 
+		void invert() {
+			values[0] *= -1.0f;
+			values[1] *= -1.0f;
+			values[2] *= -1.0f;
+		}
+
 		float* getValues ()
 		{
 			return values;
@@ -140,8 +146,7 @@ struct Mesh
 //--------------esp. for the raytracer-----------------------
 
 
-struct Lightsource
-{
+struct Lightsource {
 	Vector position;
 	float ambient[3];
 	float diffuse[3];
@@ -151,8 +156,7 @@ struct Lightsource
 	float quadAtt;
 };
 
-struct Material
-{
+struct Material {
 	float ambient[4];
 	float diffuse[4];
 	float specular[4];
@@ -166,8 +170,7 @@ struct Material
 	QImage texture;
 };
 
-struct Triangle //just to have all the informations of Material and
-{
+struct Triangle { //just to have all the informations of Material and
 	Material material;
 	Vector vertices[3];
 	Vector normals[3];

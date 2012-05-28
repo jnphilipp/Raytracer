@@ -405,12 +405,13 @@ void Raytracer::genImage()
 QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	float dis = FLT_MAX;
 	Triangle *triangle;
+	Vector p;
 
 	for ( int i = 0; i < octree->size(); i++ ) {
 		if ( octree->cutVoxel(i, &start, &dir, dis) ) {
 			Triangle tr;
 
-			float tmp = octree->cutTriangles(i, &start, &dir, &tr);
+			float tmp = octree->cutTriangles(i, &start, &dir, &tr, &p);
 			if ( tmp < dis ) {
 				dis = tmp;
 				triangle = &tr;
@@ -419,7 +420,42 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	}
 
 	if ( dis != FLT_MAX ) {
-		return QColor((unsigned int)(triangle->material.ambient[0]*256*dis)%256,  (unsigned int)(triangle->material.ambient[1]*256*dis)%256, (unsigned int)(triangle->material.ambient[2]*256*dis)%256);
+		float r = 0.0f, g = 0.0f, b = 0.0f;
+
+		for ( unsigned int i = 0; i < lights.size(); i++ ) {
+			r += triangle->material.ambient[0] * lights[i].ambient[0];
+			g += triangle->material.ambient[1] * lights[i].ambient[1];
+			b += triangle->material.ambient[2] * lights[i].ambient[2];
+
+			//fatt(d) = 1 / ( c0 + c1d + c2d2 )
+			Vector l = p - lights[i].position;
+			l.normalize();
+			float a2 = scalarProduct(p, triangle->ubeta) + triangle->kbeta;
+			float a3 = scalarProduct(p, triangle->ugamma) + triangle->kgamma;
+			float a1 = 1.0f - a2 - a3;
+			Vector n = triangle->normals[0] * a1 + triangle->normals[1] * a2 + triangle->normals[2] * a3;
+			n.normalize();
+			Vector a = (start - p);
+			a.normalize();
+			if ( (scalarProduct(n, a) / a.norm() * n.norm()) < 0 )
+				n.invert();
+			Vector ra = (n - l) * scalarProduct(n, l) * 2;
+
+			if ( (scalarProduct(n, l) / l.norm() * n.norm()) < 0 ) {
+				float fatt;
+
+				if ( lights[i].constAtt == 0 && lights[i].linAtt == 0 && lights[i].quadAtt == 0 )
+					fatt = 1.0f;
+				else
+					fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
+
+				r += fatt * (lights[i].diffuse[0] * triangle->material.diffuse[0] * scalarProduct(n, l) + lights[i].specular[0] * triangle->material.specular[0] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));
+				g += fatt * (lights[i].diffuse[1] * triangle->material.diffuse[1] * scalarProduct(n, l) + lights[i].specular[1] * triangle->material.specular[1] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));
+				b += fatt * (lights[i].diffuse[2] * triangle->material.diffuse[2] * scalarProduct(n, l) + lights[i].specular[2] * triangle->material.specular[2] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));//cout << "r: " << r << ", g: " << g << ", b: " << b << "\n";
+			}
+		}
+
+		return QColor((unsigned int)(r * 256)%256, (unsigned int)(g * 256)%256, (unsigned int)(b * 256)%256);
 	}
 
 	return backgroundColor;
