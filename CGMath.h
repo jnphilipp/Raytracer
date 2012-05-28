@@ -148,7 +148,7 @@ struct Lightsource
 	float specular[3];
 	float constAtt;
 	float linAtt;
-	float quadAtt;	
+	float quadAtt;
 };
 
 struct Material
@@ -166,7 +166,7 @@ struct Material
 	QImage texture;
 };
 
-struct Triangle //just to have all the informations of Material and 
+struct Triangle //just to have all the informations of Material and
 {
 	Material material;
 	Vector vertices[3];
@@ -185,7 +185,7 @@ inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 	if ( (d = scalarProduct(*dir, (*triangle).normal)) != 0  ) {
 		float t = scalarProduct(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
 
-		if ( t < 0 )
+		if ( t < 0 && t > 1 )
 			return false;
 
 		Vector p_temp = *start + *dir * t;

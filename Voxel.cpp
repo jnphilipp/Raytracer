@@ -14,7 +14,9 @@ Voxel::Voxel(Vector *vminx, Vector *vminy, Vector *vminz, Vector *vmaxx, Vector 
 
 
 void Voxel::addTriangle(Triangle *triangle) {
-	triangles.push_back(triangle);
+	std::vector<Triangle *>::iterator it;
+	if ( (it = std::find(triangles.begin(), triangles.end(), triangle)) == triangles.end() )
+		triangles.push_back(triangle);
 }
 
 int Voxel::size() {
@@ -22,8 +24,8 @@ int Voxel::size() {
 }
 
 bool Voxel::cutVoxel(Vector *start, Vector *dir) {
-	Vector ldown = Vector(minx[0], miny[1], minz[2]);std::cout << "ldown: " << ldown[0] << ", " << ldown[1] << ", " << ldown[2] << "\n";
-	Vector rtop = Vector(maxx[0], maxy[1], maxz[2]);std::cout << "rtop: " << rtop[0] << ", " << rtop[1] << ", " << rtop[2] << "\n";
+	Vector ldown = Vector(minx[0], miny[1], minz[2]);//std::cout << "ldown: " << ldown[0] << ", " << ldown[1] << ", " << ldown[2] << "\n";
+	Vector rtop = Vector(maxx[0], maxy[1], maxz[2]);//std::cout << "rtop: " << rtop[0] << ", " << rtop[1] << ", " << rtop[2] << "\n";
 	Vector normx = Vector(1.0f, 0.0f, 0.0f);
 	Vector normy = Vector(0.0f, 1.0f, 0.0f);
 	Vector normz = Vector(0.0f, 0.0f, 1.0f);
@@ -32,44 +34,57 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir) {
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((ldown - *start), normx) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
-
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((ldown - *start), normy) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
-
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((ldown - *start), normz) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
-
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((rtop - *start), normx) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
-
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((rtop - *start), normy) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
-
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((rtop - *start), normz) / d;
 
-		if ( c < 0 )
-			return false;
+		Vector p = *start + *dir *c;
+		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
+			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+			return true;
+		}
 	}
 
-	return true;
+	return false;
 }

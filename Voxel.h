@@ -2,6 +2,7 @@
 #define VOXEL_H
 
 #include <iostream>
+#include <algorithm>
 
 //#include "MetaVoxel.h"
 #include "CGMath.h"
