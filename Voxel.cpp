@@ -1,89 +1,93 @@
 #include "Voxel.h"
 
-Voxel::Voxel(Vector *vminx, Vector *vminy, Vector *vminz, Vector *vmaxx, Vector *vmaxy, Vector *vmaxz) {
-	minx = *vminx;
-	miny = *vminy;
-	miny = *vminz;
-	maxx = *vmaxx;
-	maxy = *vmaxy;
-	maxz = *vmaxz;
-	//normx = Vector(1.0f, 0.0f, 0.0f);
-	//normy = Vector(0.0f, 1.0f, 0.0f);
-	//normz = Vector(0.0f, 0.0f, 1.0f);
+Voxel::Voxel(Vector *vldown, Vector *vrtop, Vector *vnormx, Vector *vnormy, Vector *vnormz) {
+	ldown = *vldown;
+	rtop = *vrtop;
+	normx = *vnormx;
+	normy = *vnormy;
+	normz = *vnormz;
 }
 
+/*################################################
 
+Returns the number of triangles the voxel holds.
+
+################################################*/
+int Voxel::size() {
+	return triangles.size();
+}
+
+/*################################################
+
+Adds a triangle to the voxel and makes sure the
+triangle wasn't add before.
+
+################################################*/
 void Voxel::addTriangle(Triangle *triangle) {
 	std::vector<Triangle *>::iterator it;
 	if ( (it = std::find(triangles.begin(), triangles.end(), triangle)) == triangles.end() )
 		triangles.push_back(triangle);
 }
 
-int Voxel::size() {
-	return triangles.size();
-}
+/*################################################
 
-bool Voxel::cutVoxel(Vector *start, Vector *dir) {
-	Vector ldown = Vector(minx[0], miny[1], minz[2]);//std::cout << "ldown: " << ldown[0] << ", " << ldown[1] << ", " << ldown[2] << "\n";
-	Vector rtop = Vector(maxx[0], maxy[1], maxz[2]);//std::cout << "rtop: " << rtop[0] << ", " << rtop[1] << ", " << rtop[2] << "\n";
-	Vector normx = Vector(1.0f, 0.0f, 0.0f);
-	Vector normy = Vector(0.0f, 1.0f, 0.0f);
-	Vector normz = Vector(0.0f, 0.0f, 1.0f);
+Checks whether a ray intersects this voxels or
+not. The variable dis specifies the distance
+between the intersection point from the start
+point of the ray. In order to ignore the distance
+set it to FLT_MAX.
 
+################################################*/
+bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	float d, c;
+
+	//ldown -> x
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((ldown - *start), normx) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[1] <= rtop[1] && p[1] >= ldown[1] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
+	//ldown -> y
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((ldown - *start), normy) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
+	//ldown -> z
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((ldown - *start), normz) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[1] <= rtop[1] && p[1] >= ldown[1] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
+	//rtop -> x
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((rtop - *start), normx) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[1] <= rtop[1] && p[1] >= ldown[1] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
+	//rtop -> y
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((rtop - *start), normy) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
+	//rtop -> z
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((rtop - *start), normz) / d;
 
 		Vector p = *start + *dir *c;
-		if ( p[0] <= maxx[0] && p[0] >= minx[0] && p[1] <= maxy[1] && p[1] >= miny[1] && p[2] <= maxz[2] && p[2] >= minz[2] ) {
-			//std::cout << "p: " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[1] <= rtop[1] && p[1] >= ldown[1] && (*start - p).norm() <= dis )
 			return true;
-		}
 	}
 
 	return false;

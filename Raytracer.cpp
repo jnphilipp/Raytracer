@@ -150,44 +150,43 @@ Raytracer::Raytracer( QString path ) {
 		t.kbeta = scalarProduct(-t.vertices[0], t.ubeta);
 		t.kgamma = scalarProduct(-t.vertices[0], t.ugamma);
 
-		//Punkt 1
+		//corner 1
 		if ( minx > t.vertices[0][0] )
 			minx = t.vertices[0][0];
+		else if ( maxx < t.vertices[0][0] )
+			maxx = t.vertices[0][0];
 		if ( miny > t.vertices[0][1] )
 			miny = t.vertices[0][1];
+		else if ( maxy < t.vertices[0][1] )
+			maxy = t.vertices[0][1];
 		if ( minz > t.vertices[0][2] )
 			minz = t.vertices[0][2];
-		if ( maxx < t.vertices[0][0] )
-			maxx = t.vertices[0][0];
-		if ( maxy < t.vertices[0][1] )
-			maxy = t.vertices[0][1];
-		if ( maxz < t.vertices[0][2] )
+		else if ( maxz < t.vertices[0][2] )
 			maxz = t.vertices[0][2];
 
-		//Punkt 2
+		//corner 2
 		if ( minx > t.vertices[1][0] )
 			minx = t.vertices[1][0];
+		else if ( maxx < t.vertices[1][0] )
+			maxx = t.vertices[1][0];
 		if ( miny > t.vertices[1][1] )
 			miny = t.vertices[1][1];
+		else if ( maxy < t.vertices[1][1] )
+			maxy = t.vertices[1][1];
 		if ( minz > t.vertices[1][2] )
 			minz = t.vertices[1][2];
-		if ( maxx < t.vertices[1][0] )
-			maxx = t.vertices[1][0];
-		if ( maxy < t.vertices[1][1] )
-			maxy = t.vertices[1][1];
 		else if ( maxz < t.vertices[1][2] )
 			maxz = t.vertices[1][2];
 
-		//Punkt 3
-		if ( minx > t.vertices[2].getValues()[0] )
-			minx = t.vertices[2].getValues()[0];
-		if ( miny > t.vertices[2].getValues()[1] )
-			miny = t.vertices[2].getValues()[1];
-		if ( maxx < t.vertices[2].getValues()[0] )
-			maxx = t.vertices[2].getValues()[0];
-		if ( maxy < t.vertices[2].getValues()[1] )
-			maxy = t.vertices[2].getValues()[1];
-
+		//corner 3
+		if ( minx > t.vertices[2][0] )
+			minx = t.vertices[2][0];
+		else if ( maxx < t.vertices[2][0] )
+			maxx = t.vertices[2][0];
+		if ( miny > t.vertices[2][1] )
+			miny = t.vertices[2][1];
+		else if ( maxy < t.vertices[2][1] )
+			maxy = t.vertices[2][1];
 		if ( minz > t.vertices[2][2] )
 			minz = t.vertices[2][2];
 		else if ( maxz < t.vertices[2][2] )
@@ -210,7 +209,7 @@ Raytracer::Raytracer( QString path ) {
 	minz -= 0.1f;
 	maxz += 0.1f;
 
-	//kd-tree
+	//octree
 	cout << "Setting up octree.\n";
 	octree = new Octree();
 	octree->build(&triangles, minx, miny, minz, maxx, maxy, maxz);
@@ -361,7 +360,7 @@ void Raytracer::genImage()
 
 
 //comment this line out to disable parallel computation - recommended for bug tracing
-//#pragma omp parallel for schedule(dynamic, 1)
+#pragma omp parallel for schedule(dynamic, 1)
 	for (int j=0; j<image->height(); j+=1)
 	{
 		for (int i=0; i<image->width(); i+=1)
@@ -406,24 +405,11 @@ void Raytracer::genImage()
 QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	float dis = FLT_MAX;
 	Triangle *triangle;
-	int index = -1;
-	bool c = false;
-
-	/*for ( int i = 0; i < triangles.size(); i++ ) {
-		Vector p;
-		if ( cut(&start, &dir, &triangles[i], &p) ) {
-			float tmp = (start - p).norm();
-			if ( tmp < dis ) {
-				dis = tmp;
-				index = i;
-			}
-		}
-	}*/
 
 	for ( int i = 0; i < octree->size(); i++ ) {
-		if ( octree->cutVoxel(i, &start, &dir) ) {
+		if ( octree->cutVoxel(i, &start, &dir, dis) ) {
 			Triangle tr;
-			c = true;
+
 			float tmp = octree->cutTriangles(i, &start, &dir, &tr);
 			if ( tmp < dis ) {
 				dis = tmp;
@@ -433,32 +419,8 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	}
 
 	if ( dis != FLT_MAX ) {
-		//std::cout << triangle->material.ambient[0] << "\n";
-		//std::cout << triangle->material.ambient[1] << "\n";
-		//std::cout << triangle->material.ambient[2] << "\n";
-		//std::cout << triangle->material.ambient[3] << "\n";
 		return QColor((unsigned int)(triangle->material.ambient[0]*256*dis)%256,  (unsigned int)(triangle->material.ambient[1]*256*dis)%256, (unsigned int)(triangle->material.ambient[2]*256*dis)%256);
 	}
-	else if ( c ) {
-		return QColor(255, 0, 0);
-	}
-
-
-	//if ( dis != FLT_MAX )
-	//	return QColor((int)(index * 10)%256, index%256, (int)(index * index)%256);
-
-	/*if ( index == 0 )
-			return QColor(255,0,0);
-	else if ( index == 1 )
-		return QColor(0,255,0);
-	else if ( index == 2 )
-		return QColor(0,125,255);
-	else if ( index == 3 )
-		return QColor(0,255,125);
-	else if ( index == 4 )
-		return QColor(125,125,79);
-	else if ( index == 5 )
-		return QColor(125,0,125);*/
 
 	return backgroundColor;
 }

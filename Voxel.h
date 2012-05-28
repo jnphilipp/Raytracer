@@ -4,29 +4,33 @@
 #include <iostream>
 #include <algorithm>
 
-//#include "MetaVoxel.h"
 #include "CGMath.h"
 
 class Voxel {
 	public:
-		Voxel(Vector *minx, Vector *miny, Vector *minz, Vector *maxx, Vector *maxy, Vector *maxz);
+		Voxel(Vector *vldown, Vector *vrtop, Vector *vnormx, Vector *vnormy, Vector *vnormz);
 		void addTriangle(Triangle *triangle);
 		int size();
-		bool cutVoxel(Vector *start, Vector *dir);
+		bool cutVoxel(Vector *start, Vector *dir, float dis);
+		std::vector<Triangle *> * getTriangles() {
+			return &triangles;
+		}
 		Triangle * getTriangle(int i) {
 			return triangles[i];
 		}
+		Vector * getLdown() {
+			return &ldown;
+		}
+		Vector * getRtop() {
+			return &rtop;
+		}
 
 	private:
-		Vector minx;
-		Vector miny;
-		Vector minz;
-		Vector maxx;
-		Vector maxy;
-		Vector maxz;
-		//Vector normx;
-		//Vector normy;
-		//Vector normz;
+		Vector ldown;
+		Vector rtop;
+		Vector normx;
+		Vector normy;
+		Vector normz;
 		std::vector<Triangle *> triangles;
 };
 

@@ -179,7 +179,13 @@ struct Triangle //just to have all the informations of Material and
 	float kgamma;
 };
 
+/*################################################
 
+Checks whether the triangle is intersected by
+the ray. Returns true if it is so and the
+intersection point.
+
+################################################*/
 inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 	float d;
 	if ( (d = scalarProduct(*dir, (*triangle).normal)) != 0  ) {
