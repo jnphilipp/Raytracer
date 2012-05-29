@@ -138,7 +138,8 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 				voxels->push_back(tmp[j]);
 		}
 		else {
-			voxels->push_back(vox[i]);
+			if ( vox[i]->size() != 0 )
+				voxels->push_back(vox[i]);
 		}
 	}
 }
