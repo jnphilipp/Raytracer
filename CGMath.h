@@ -53,6 +53,10 @@ class Vector {
   			return *this;
 		}
 
+		bool operator == ( const Vector& v ) {
+			return  values[0] == v[0] && values[1] == v[1] && values[2] == v[2];
+		}
+
 		Vector operator + ( const Vector& v ) const
 		{
 			return Vector( values[0] + v[0], values[1] + v[1], values[2] + v[2] );
@@ -110,15 +114,21 @@ class Vector {
 		float values[4];
 };
 
-inline float scalarProduct( Vector v1, Vector v2 )
-{
+inline float scalarProduct( Vector v1, Vector v2 ) {
   	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 };
 
-inline Vector crossProduct( Vector v1, Vector v2 )
-{
+inline float dot(Vector v1, Vector v2) {
+	return scalarProduct(v1, v2);
+};
+
+inline Vector crossProduct( Vector v1, Vector v2 ) {
 	return Vector(v1[1]*v2[2] - v2[1]*v1[2], v1[2]*v2[0] - v2[2]*v1[0], v1[0]*v2[1] - v2[0]*v1[1]);
 };
+
+inline Vector cross(Vector v1, Vector v2) {
+	return crossProduct(v1, v2);
+}
 
 struct Texture
 {
@@ -191,19 +201,19 @@ intersection point.
 ################################################*/
 inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 	float d;
-	if ( (d = scalarProduct(*dir, (*triangle).normal)) != 0  ) {
-		float t = scalarProduct(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
+	if ( (d = dot(*dir, (*triangle).normal)) != 0  ) {
+		float t = dot(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
 
-		if ( t < 0 && t > 1 )
+		if ( t <= 0 )
 			return false;
 
 		Vector p_temp = *start + *dir * t;
-		float beta = scalarProduct(p_temp, (*triangle).ubeta) + (*triangle).kbeta;
+		float beta = dot(p_temp, (*triangle).ubeta) + (*triangle).kbeta;
 
 		if ( beta < 0 )
 			return false;
 
-		float gamma = scalarProduct(p_temp, (*triangle).ugamma) + (*triangle).kgamma;
+		float gamma = dot(p_temp, (*triangle).ugamma) + (*triangle).kgamma;
 
 		if ( gamma < 0 )
 			return false;

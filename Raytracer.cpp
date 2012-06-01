@@ -212,8 +212,12 @@ Raytracer::Raytracer( QString path ) {
 	//octree
 	cout << "Setting up octree.\n";
 	octree = new Octree();
+	QTime t;
+	t.start();
 	octree->build(&triangles, minx, miny, minz, maxx, maxy, maxz);
+	cout<<"Time: "<<t.elapsed()/1000.0<<endl;
 	cout << "Got " << octree->size() << " Voxels\n";
+	cout << "Got " << lights.size() << " Lights\n";
 }
 
 void Raytracer::init()
@@ -236,8 +240,7 @@ void Raytracer::init()
 	//create DisplayList
 	displayList = glGenLists(1);
 	glNewList(displayList, GL_COMPILE);
-	for (int i=0; i<triangles.size(); ++i)
-	{
+	for ( unsigned int i = 0; i < triangles.size(); ++i ) {
 		//glUniform1fARB( indexPos, i );
 		float r = (float)(i % 255);
 		float g = (float)((i/255) % 255);
@@ -310,6 +313,7 @@ void Raytracer::initializeGL()
 	glClearColor((float)backgroundColor.red()/255.0, (float)backgroundColor.green()/255.0, (float)backgroundColor.blue()/255.0, 1.0);
 	//glClearColor(1.0, 1.0, 1.0, 0.0);
 	cout<<"Back_Color: "<<backgroundColor.red()/255.0<<", "<<(float)backgroundColor.green()/255.0<<", "<<(float)backgroundColor.blue()/255.0<<endl;
+	cout<<"Ambient_Light: "<<ambientLight.red()/255.0<<", "<<(float)ambientLight.green()/255.0<<", "<<(float)ambientLight.blue()/255.0<<endl;
 
 	glDepthFunc(GL_LEQUAL);							// Type Of Depth Testing
 	glEnable(GL_DEPTH_TEST);						// Enable Depth Testing
@@ -365,7 +369,7 @@ void Raytracer::genImage()
 	{
 		for (int i=0; i<image->width(); i+=1)
 		{
-			unsigned int index = idx[j*image->width()+i];
+			//unsigned int index = idx[j*image->width()+i];
 			double dX=0.0, dY=0.0, dZ=0.0;
 			gluUnProject( (float)i, (float)j, zValues[j*image->width()+i], mvMatrix, projMatrix, viewPort, &dX, &dY, &dZ );
 			Vector intersection(dX, dY, dZ);
@@ -404,58 +408,122 @@ void Raytracer::genImage()
 
 QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 	float dis = FLT_MAX;
-	Triangle *triangle;
+	Triangle triangle;
 	Vector p;
 
 	for ( int i = 0; i < octree->size(); i++ ) {
 		if ( octree->cutVoxel(i, &start, &dir, dis) ) {
 			Triangle tr;
+			Vector q;
 
-			float tmp = octree->cutTriangles(i, &start, &dir, &tr, &p);
+			float tmp = octree->cutTriangles(i, &start, &dir, &tr, &q);
 			if ( tmp < dis ) {
 				dis = tmp;
-				triangle = &tr;
+				triangle = tr;
+				p = q;
 			}
 		}
 	}
 
 	if ( dis != FLT_MAX ) {
-		float r = 0.0f, g = 0.0f, b = 0.0f;
+		float r = 0.0f, g = 0.0f, b = 0.0f, a1 = 0.0f, a2 = 0.0f, a3=0.0f;
+		//r += triangle.material.ambient[0] * (float)(ambientLight.red() + 180)/255.0 + 0.5;
+		//g += triangle.material.ambient[1] * (float)(ambientLight.green() + 180)/255.0 + 0.5;
+		//b += triangle.material.ambient[2] * (float)(ambientLight.blue() + 180)/255.0 + 0.5;
 
 		for ( unsigned int i = 0; i < lights.size(); i++ ) {
-			r += triangle->material.ambient[0] * lights[i].ambient[0];
-			g += triangle->material.ambient[1] * lights[i].ambient[1];
-			b += triangle->material.ambient[2] * lights[i].ambient[2];
+			r += triangle.material.ambient[0] * lights[i].ambient[0];
+			g += triangle.material.ambient[1] * lights[i].ambient[1];
+			b += triangle.material.ambient[2] * lights[i].ambient[2];
 
-			//fatt(d) = 1 / ( c0 + c1d + c2d2 )
-			Vector l = p - lights[i].position;
+			Vector l = lights[i].position - p;
+			//Vector li = lights[i].position - p;
+			//cout << "l: " << en[0] << "=" << lights[i].position[0] << "|" << en[1] << "=" << lights[i].position[1] << "|" << en[2] << "=" << lights[i].position[2] << "\n";
 			l.normalize();
-			float a2 = scalarProduct(p, triangle->ubeta) + triangle->kbeta;
-			float a3 = scalarProduct(p, triangle->ugamma) + triangle->kgamma;
-			float a1 = 1.0f - a2 - a3;
-			Vector n = triangle->normals[0] * a1 + triangle->normals[1] * a2 + triangle->normals[2] * a3;
+			a2 = dot(p, triangle.ubeta) + triangle.kbeta;
+			a3 = dot(p, triangle.ugamma) + triangle.kgamma;
+			a1 = 1.0f - a2 - a3;
+			Vector n = triangle.normals[0] * a1 + triangle.normals[1] * a2 + triangle.normals[2] * a3;
+			//cout << triangle->normals[1][0] << ", " << triangle->normals[1][1] << ", " << triangle->normals[1][2] << "\n";
 			n.normalize();
-			Vector a = (start - p);
+			//cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\n";
+
+			Vector a = (p - start); //umgekehrte blickrichtung
 			a.normalize();
-			if ( (scalarProduct(n, a) / a.norm() * n.norm()) < 0 )
+			if ( dot(n, a) < 0 ) // / (a.norm() * n.norm())) < 0 ) // wenn Winkel zwischen a und n > 90 Grad n invertieren
 				n.invert();
-			Vector ra = (n - l) * scalarProduct(n, l) * 2;
 
-			if ( (scalarProduct(n, l) / l.norm() * n.norm()) < 0 ) {
-				float fatt;
+			Vector v_r = (n * dot(n, l) * 2) - l;
+			//v_r.normalize();
 
-				if ( lights[i].constAtt == 0 && lights[i].linAtt == 0 && lights[i].quadAtt == 0 )
-					fatt = 1.0f;
-				else
-					fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
+			if ( dot(n, l) < 0 ) {// / (l.norm() * n.norm())) < 0 ) {
+				bool shadow = false;
+				float ldis = (lights[i].position - p).norm();
 
-				r += fatt * (lights[i].diffuse[0] * triangle->material.diffuse[0] * scalarProduct(n, l) + lights[i].specular[0] * triangle->material.specular[0] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));
-				g += fatt * (lights[i].diffuse[1] * triangle->material.diffuse[1] * scalarProduct(n, l) + lights[i].specular[1] * triangle->material.specular[1] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));
-				b += fatt * (lights[i].diffuse[2] * triangle->material.diffuse[2] * scalarProduct(n, l) + lights[i].specular[2] * triangle->material.specular[2] * pow(max(0.0f, scalarProduct(start, ra)), triangle->material.shininess));//cout << "r: " << r << ", g: " << g << ", b: " << b << "\n";
+				for ( int j = 0; j < octree->size(); j++ ) {
+					float lent = (lights[i].position[0] - p[0]) / l[0];
+
+					if ( octree->cutVoxel(j, &p, &l, ldis) ) {
+						Vector m;
+
+						octree->cutTriangles(j, &p, &l, &m, ldis);
+						float t = (m[0] - p[0]) / l[0];
+						Vector mt = p + l * t;
+						if ( mt == m && t > 0.00001 && t < lent ) {
+							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
+							shadow = true;
+							break;
+						}
+						t = (m[1] - p[1]) / l[1];
+						mt = p + l * t;
+						if ( mt == m && t > 0.00001 && t < lent ) {
+							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
+							shadow = true;
+							break;
+						}
+						t = (m[2] - p[2]) / l[2];
+						mt = p + l * t;
+						if ( mt == m && t > 0.00001 && t < lent ) {
+							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
+							shadow = true;
+							break;
+						}
+					}
+				}
+
+				if ( !shadow ) {
+					float fatt;
+
+					if ( lights[i].constAtt == 0 && lights[i].linAtt == 0 && lights[i].quadAtt == 0 )
+						fatt = 1.0f;
+					else {
+						fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
+						cout << fatt << "\n";
+						}
+
+					r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * scalarProduct(n, l) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
+					g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * scalarProduct(n, l) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
+					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * scalarProduct(n, l) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
+				}
+				//else {
+				//	r = 1; g = 0; b = 0;
+				//}
 			}
+			//else {
+			//	r =0;g=1;b=0;
+			//}
 		}
 
-		return QColor((unsigned int)(r * 256)%256, (unsigned int)(g * 256)%256, (unsigned int)(b * 256)%256);
+		if ( triangle.material.isTexture ) {
+			Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
+			QColor tc = triangle.material.texture.pixel((int)(tex[0] * triangle.material.texture.width()), (int)(tex[1] * triangle.material.texture.height()));
+
+			r *= (tc.red()/255);
+			g *= (tc.green()/255);
+			b *= (tc.blue()/255);
+		}
+
+		return QColor((unsigned int)(r * 255)%256, (unsigned int)(g * 255)%256, (unsigned int)(b * 255)%256);
 	}
 
 	return backgroundColor;

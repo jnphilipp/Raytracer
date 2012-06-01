@@ -174,7 +174,24 @@ float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *tria
 			float tmp = (*start - q).norm();
 			if ( tmp < dis ) {
 				dis = tmp;
-				triangle = voxels[voxel]->getTriangle(i);
+				*triangle = *(voxels[voxel]->getTriangle(i));
+				*p = q;
+			}
+		}
+	}
+
+	return dis;
+}
+
+/*################################################
+################################################*/
+float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Vector *p, float dis) {
+	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
+		Vector q;
+		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &q) ) {
+			float tmp = (*start - q).norm();
+			if ( tmp < dis ) {
+				dis = tmp;
 				*p = q;
 			}
 		}
@@ -190,9 +207,9 @@ holds the results.
 
 ################################################*/
 void Octree::getVoxelsP(Vector *p, Vector *middle, std::map<int, int> *voxels) {
-	float x0 =  scalarProduct((*p - *middle), normx);
-	float y0 =  scalarProduct((*p - *middle), normy);
-	float z0 =  scalarProduct((*p - *middle), normz);
+	float x0 =  dot((*p - *middle), normx);
+	float y0 =  dot((*p - *middle), normy);
+	float z0 =  dot((*p - *middle), normz);
 
 	getVoxels(x0, y0, z0, voxels);
 }
@@ -206,16 +223,16 @@ results.
 ################################################*/
 void Octree::getVoxelsLx(Vector *start, Vector *dir, Vector *middle, std::map<int, int> *voxels) {
 	float d;
-	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
-		float x0 = scalarProduct((*middle - *start), normx) / d;
+	if ( (d = dot(*dir, normx)) != 0 ) {
+		float x0 = dot((*middle - *start), normx) / d;
 
 		if ( x0 <= 0 || x0 >= 1 )
 			return;
 
 		Vector p = *start + *dir * x0;
 
-		float y0 =  scalarProduct((p - *middle), normy);
-		float z0 =  scalarProduct((p - *middle), normz);
+		float y0 =  dot((p - *middle), normy);
+		float z0 =  dot((p - *middle), normz);
 
 		getVoxels(x0, y0, z0, voxels);
 	}
@@ -230,16 +247,16 @@ results.
 ################################################*/
 void Octree::getVoxelsLy(Vector *start, Vector *dir, Vector *middle, std::map<int, int> *voxels) {
 	float d;
-	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
-		float y0 = scalarProduct((*middle - *start), normy) / d;
+	if ( (d = dot(*dir, normy)) != 0 ) {
+		float y0 = dot((*middle - *start), normy) / d;
 
 		if ( y0 <= 0 || y0 >= 1 )
 			return;
 
 		Vector p = *start + *dir * y0;
 
-		float x0 =  scalarProduct((p - *middle), normx);
-		float z0 =  scalarProduct((p - *middle), normz);
+		float x0 =  dot((p - *middle), normx);
+		float z0 =  dot((p - *middle), normz);
 
 		getVoxels(x0, y0, z0, voxels);
 	}
@@ -254,16 +271,16 @@ results.
 ################################################*/
 void Octree::getVoxelsLz(Vector *start, Vector *dir, Vector *middle, std::map<int, int> *voxels) {
 	float d;
-	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
-		float z0 = scalarProduct((*middle - *start), normz) / d;
+	if ( (d = dot(*dir, normz)) != 0 ) {
+		float z0 = dot((*middle - *start), normz) / d;
 
 		if ( z0 <= 0 || z0 >= 1 )
 			return;
 
 		Vector p = *start + *dir * z0;
 
-		float x0 =  scalarProduct((p - *middle), normx);
-		float y0 =  scalarProduct((p - *middle), normy);
+		float x0 =  dot((p - *middle), normx);
+		float y0 =  dot((p - *middle), normy);
 
 		getVoxels(x0, y0, z0, voxels);
 	}
