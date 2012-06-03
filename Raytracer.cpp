@@ -427,9 +427,9 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 
 	if ( dis != FLT_MAX ) {
 		float r = 0.0f, g = 0.0f, b = 0.0f, a1 = 0.0f, a2 = 0.0f, a3=0.0f;
-		//r += triangle.material.ambient[0] * (float)(ambientLight.red() + 180)/255.0 + 0.5;
-		//g += triangle.material.ambient[1] * (float)(ambientLight.green() + 180)/255.0 + 0.5;
-		//b += triangle.material.ambient[2] * (float)(ambientLight.blue() + 180)/255.0 + 0.5;
+		//r += triangle.material.ambient[0] * (ambientLight.red()/255.0);
+		//g += triangle.material.ambient[1] * (ambientLight.green()/255.0);
+		//b += triangle.material.ambient[2] * (ambientLight.blue()/255.0);
 
 		for ( unsigned int i = 0; i < lights.size(); i++ ) {
 			r += triangle.material.ambient[0] * lights[i].ambient[0];
@@ -443,6 +443,8 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 			a2 = dot(p, triangle.ubeta) + triangle.kbeta;
 			a3 = dot(p, triangle.ugamma) + triangle.kgamma;
 			a1 = 1.0f - a2 - a3;
+			//if ( a1 < 0 || a2 < 0 || a3 < 0 || a1 + a2 + a3 > 1 )
+			//	cout << "a1: " << a1 << "\ta2: " << a2 << "\ta3: " << a3 << "\n";
 			Vector n = triangle.normals[0] * a1 + triangle.normals[1] * a2 + triangle.normals[2] * a3;
 			//cout << triangle->normals[1][0] << ", " << triangle->normals[1][1] << ", " << triangle->normals[1][2] << "\n";
 			n.normalize();
@@ -518,9 +520,10 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 			Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
 			QColor tc = triangle.material.texture.pixel((int)(tex[0] * triangle.material.texture.width()), (int)(tex[1] * triangle.material.texture.height()));
 
-			r *= (tc.red()/255);
-			g *= (tc.green()/255);
-			b *= (tc.blue()/255);
+			r *= (tc.red());
+			g *= (tc.green());
+			b *= (tc.blue());
+			return QColor((unsigned int)(r)%256, (unsigned int)(g)%256, (unsigned int)(b)%256);
 		}
 
 		return QColor((unsigned int)(r * 255)%256, (unsigned int)(g * 255)%256, (unsigned int)(b * 255)%256);
