@@ -456,7 +456,6 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 				n.invert();
 
 			Vector v_r = (n * dot(n, l) * 2) - l;
-			//v_r.normalize();
 
 			if ( dot(n, l) < 0 ) {// / (l.norm() * n.norm())) < 0 ) {
 				bool shadow = false;
@@ -471,21 +470,21 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 						octree->cutTriangles(j, &p, &l, &m, ldis);
 						float t = (m[0] - p[0]) / l[0];
 						Vector mt = p + l * t;
-						if ( mt == m && t > 0.00001 && t < lent ) {
+						if ( mt == m && t > 0.00001 && t < ldis ) {
 							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
 						}
 						t = (m[1] - p[1]) / l[1];
 						mt = p + l * t;
-						if ( mt == m && t > 0.00001 && t < lent ) {
+						if ( mt == m && t > 0.00001 && t < ldis ) {
 							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
 						}
 						t = (m[2] - p[2]) / l[2];
 						mt = p + l * t;
-						if ( mt == m && t > 0.00001 && t < lent ) {
+						if ( mt == m && t > 0.00001 && t < ldis ) {
 							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
@@ -507,13 +506,7 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 					g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * scalarProduct(n, l) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
 					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * scalarProduct(n, l) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
 				}
-				//else {
-				//	r = 1; g = 0; b = 0;
-				//}
 			}
-			//else {
-			//	r =0;g=1;b=0;
-			//}
 		}
 
 		if ( triangle.material.isTexture ) {

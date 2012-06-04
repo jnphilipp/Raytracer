@@ -45,7 +45,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((ldown - *start), normx) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[1] <= rtop[1] && p[1] >= ldown[1] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
 	}
@@ -53,7 +53,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((ldown - *start), normy) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
 	}
@@ -61,7 +61,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((ldown - *start), normz) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[1] <= rtop[1] && p[1] >= ldown[1] && (*start - p).norm() <= dis )
 			return true;
 	}
@@ -69,7 +69,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normx)) != 0 ) {
 		c = scalarProduct((rtop - *start), normx) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[1] <= rtop[1] && p[1] >= ldown[1] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
 	}
@@ -77,7 +77,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normy)) != 0 ) {
 		c = scalarProduct((rtop - *start), normy) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[2] <= rtop[2] && p[2] >= ldown[2] && (*start - p).norm() <= dis )
 			return true;
 	}
@@ -85,7 +85,7 @@ bool Voxel::cutVoxel(Vector *start, Vector *dir, float dis) {
 	if ( (d = scalarProduct(*dir, normz)) != 0 ) {
 		c = scalarProduct((rtop - *start), normz) / d;
 
-		Vector p = *start + *dir *c;
+		Vector p = *start + *dir * c;
 		if ( p[0] <= rtop[0] && p[0] >= ldown[0] && p[1] <= rtop[1] && p[1] >= ldown[1] && (*start - p).norm() <= dis )
 			return true;
 	}

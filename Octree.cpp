@@ -186,12 +186,13 @@ float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *tria
 /*################################################
 ################################################*/
 float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Vector *p, float dis) {
+	float tdis = dis;
 	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
 		Vector q;
 		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &q) ) {
 			float tmp = (*start - q).norm();
-			if ( tmp < dis ) {
-				dis = tmp;
+			if ( tmp < tdis ) {
+				tdis = tmp;
 				*p = q;
 			}
 		}
