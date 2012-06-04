@@ -10,7 +10,7 @@
 #include "Matrix.h"
 #include "Voxel.h"
 
-#define MAX_TRIANGLEs_PER_VOXEL 700
+#define MAX_TRIANGLES_PER_VOXEL 700
 
 class Octree {
 	public:

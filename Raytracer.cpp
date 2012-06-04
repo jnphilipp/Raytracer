@@ -427,42 +427,46 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 
 	if ( dis != FLT_MAX ) {
 		float r = 0.0f, g = 0.0f, b = 0.0f, a1 = 0.0f, a2 = 0.0f, a3=0.0f;
+		bool shadow = false;
 		//r += triangle.material.ambient[0] * (ambientLight.red()/255.0);
 		//g += triangle.material.ambient[1] * (ambientLight.green()/255.0);
 		//b += triangle.material.ambient[2] * (ambientLight.blue()/255.0);
+		
+		if ( lights.size() >= 1 ) {
+			r += triangle.material.ambient[0] * lights[0].ambient[0];
+			g += triangle.material.ambient[1] * lights[0].ambient[1];
+			b += triangle.material.ambient[2] * lights[0].ambient[2];
+		}
 
 		for ( unsigned int i = 0; i < lights.size(); i++ ) {
-			r += triangle.material.ambient[0] * lights[i].ambient[0];
-			g += triangle.material.ambient[1] * lights[i].ambient[1];
-			b += triangle.material.ambient[2] * lights[i].ambient[2];
+			//r += triangle.material.ambient[0] * lights[i].ambient[0];
+			//g += triangle.material.ambient[1] * lights[i].ambient[1];
+			//b += triangle.material.ambient[2] * lights[i].ambient[2];
 
 			Vector l = lights[i].position - p;
-			//Vector li = lights[i].position - p;
-			//cout << "l: " << en[0] << "=" << lights[i].position[0] << "|" << en[1] << "=" << lights[i].position[1] << "|" << en[2] << "=" << lights[i].position[2] << "\n";
 			l.normalize();
+
 			a2 = dot(p, triangle.ubeta) + triangle.kbeta;
 			a3 = dot(p, triangle.ugamma) + triangle.kgamma;
 			a1 = 1.0f - a2 - a3;
 			//if ( a1 < 0 || a2 < 0 || a3 < 0 || a1 + a2 + a3 > 1 )
 			//	cout << "a1: " << a1 << "\ta2: " << a2 << "\ta3: " << a3 << "\n";
+
 			Vector n = triangle.normals[0] * a1 + triangle.normals[1] * a2 + triangle.normals[2] * a3;
-			//cout << triangle->normals[1][0] << ", " << triangle->normals[1][1] << ", " << triangle->normals[1][2] << "\n";
 			n.normalize();
-			//cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\n";
 
 			Vector a = (p - start); //umgekehrte blickrichtung
 			a.normalize();
+
 			if ( dot(n, a) < 0 ) // / (a.norm() * n.norm())) < 0 ) // wenn Winkel zwischen a und n > 90 Grad n invertieren
 				n.invert();
 
 			Vector v_r = (n * dot(n, l) * 2) - l;
 
 			if ( dot(n, l) < 0 ) {// / (l.norm() * n.norm())) < 0 ) {
-				bool shadow = false;
 				float ldis = (lights[i].position - p).norm();
 
 				for ( int j = 0; j < octree->size(); j++ ) {
-					float lent = (lights[i].position[0] - p[0]) / l[0];
 
 					if ( octree->cutVoxel(j, &p, &l, ldis) ) {
 						Vector m;
@@ -471,21 +475,18 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 						float t = (m[0] - p[0]) / l[0];
 						Vector mt = p + l * t;
 						if ( mt == m && t > 0.00001 && t < ldis ) {
-							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
 						}
 						t = (m[1] - p[1]) / l[1];
 						mt = p + l * t;
 						if ( mt == m && t > 0.00001 && t < ldis ) {
-							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
 						}
 						t = (m[2] - p[2]) / l[2];
 						mt = p + l * t;
 						if ( mt == m && t > 0.00001 && t < ldis ) {
-							//cout << mt[0] << "=" << m[0] << "|" << mt[1] << "=" << m[1] << "|" << mt[2] << "=" << m[2] << "\n";
 							shadow = true;
 							break;
 						}
@@ -493,33 +494,39 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 				}
 
 				if ( !shadow ) {
-					float fatt;
+					float fatt = 1.0f;
 
-					if ( lights[i].constAtt == 0 && lights[i].linAtt == 0 && lights[i].quadAtt == 0 )
-						fatt = 1.0f;
-					else {
+					if ( lights[i].constAtt != 0 && lights[i].linAtt != 0 && lights[i].quadAtt != 0 ) {
 						fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
 						cout << fatt << "\n";
-						}
+					}
 
-					r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * scalarProduct(n, l) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
-					g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * scalarProduct(n, l) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
-					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * scalarProduct(n, l) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, scalarProduct(a, v_r)), triangle.material.shininess));
+					r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * fabs(dot(n, l)) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+					g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * fabs(dot(n, l)) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
 				}
 			}
 		}
 
+		r = min(1.0f, r);
+		g = min(1.0f, g);
+		b = min(1.0f, b);
+
 		if ( triangle.material.isTexture ) {
 			Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
-			QColor tc = triangle.material.texture.pixel((int)(tex[0] * triangle.material.texture.width()), (int)(tex[1] * triangle.material.texture.height()));
+			int x = std::abs((int)(tex[0] * (triangle.material.texture.width() - 1))) % triangle.material.texture.width();
+			int y = std::abs((int)((1-tex[1]) * (triangle.material.texture.height() - 1))) % triangle.material.texture.height();
 
-			r *= (tc.red());
-			g *= (tc.green());
-			b *= (tc.blue());
-			return QColor((unsigned int)(r)%256, (unsigned int)(g)%256, (unsigned int)(b)%256);
+			QColor tc = triangle.material.texture.pixel(x, y);
+
+			r *= tc.red();
+			g *= tc.green();
+			b *= tc.blue();
+
+			return QColor(min((int)r%256, 255), min((int)g%256, 255), min((int)b%256, 255));
 		}
 
-		return QColor((unsigned int)(r * 255)%256, (unsigned int)(g * 255)%256, (unsigned int)(b * 255)%256);
+		return QColor(min((int)(r * 255)%256, 255), min((int)(g * 255)%256, 255), min((int)(b * 255)%256, 255));
 	}
 
 	return backgroundColor;

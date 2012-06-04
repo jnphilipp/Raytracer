@@ -24,7 +24,7 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 	Vector ldown = Vector(minx, miny, minz);
 	Vector rtop = Vector(maxx, maxy, maxz);
 
-	if ( triangles->size() > MAX_TRIANGLEs_PER_VOXEL ) {
+	if ( triangles->size() > MAX_TRIANGLES_PER_VOXEL ) {
 		std::vector<Triangle *> tri;
 
 		for ( unsigned int i = 0; i < triangles->size(); i++ ) {
@@ -129,7 +129,7 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 	}
 
 	for ( unsigned int i = 0; i < vox.size(); i++ ) {
-		if ( vox[i]->size() > MAX_TRIANGLEs_PER_VOXEL ) {
+		if ( vox[i]->size() > MAX_TRIANGLES_PER_VOXEL ) {
 			std::vector<Voxel *> tmp;
 
 			buildRec(vox[i]->getTriangles(), &tmp, vox[i]->getLdown(), vox[i]->getRtop());
