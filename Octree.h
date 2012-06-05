@@ -11,6 +11,7 @@
 #include "Voxel.h"
 
 #define MAX_TRIANGLES_PER_VOXEL 700
+#define MAX_RECURSION_DEPTH 10
 
 class Octree {
 	public:
@@ -19,7 +20,7 @@ class Octree {
 		int size();
 		bool cutVoxel(int voxel, Vector *start, Vector *dir, float dis);
 		float cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, Vector *p);
-		float cutTriangles(int voxel, Vector *start, Vector *dir, Vector *p, float dis);
+		bool cutTriangles(int voxel, Vector *start, Vector *dir, float dis);
 
 	private:
 		Vector normx;
@@ -33,7 +34,7 @@ class Octree {
 		void getVoxelsLz(Vector *start, Vector *dir, Vector *middle, std::map<int, int> *voxels);
 		void getVoxelsT(Triangle *triangle, Vector *start, Vector *dir, Vector *middle, std::map<int, int> *voxels);
 		void getVoxels(float x0, float y0, float z0, std::map<int, int> *voxels);
-		void buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *vox, Vector *ldown, Vector *rtop);
+		void buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *vox, Vector *ldown, Vector *rtop, int depth);
 };
 
 #endif

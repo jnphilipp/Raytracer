@@ -31,7 +31,7 @@ void Octree::build(std::vector<Triangle> *triangles, float minx, float miny, flo
 			tri.push_back(&(*triangles)[i]);
 		}
 
-		buildRec(&tri, &voxels, &ldown, &rtop);
+		buildRec(&tri, &voxels, &ldown, &rtop, 0);
 	}
 	else {
 		voxels.push_back(new Voxel(&ldown, &rtop, &normx, &normy, &normz));
@@ -51,14 +51,23 @@ triangles is specified in
 MAX_TRIANGLEs_PER_VOXEL.
 
 ################################################*/
-void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *voxels, Vector *ldown, Vector *rtop) {
+void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *voxels, Vector *ldown, Vector *rtop, int depth) {
 	Vector middle = *ldown + (*rtop - *ldown) * 0.5f;
 	normx = (Vector((*ldown)[0], middle[1], middle[2]) - middle);
 	normy = (Vector(middle[0], (*ldown)[1], middle[2]) - middle);
 	normz = (Vector(middle[0], middle[1], (*ldown)[2]) - middle);
 
-	std::vector<Voxel *> vox;
+	//maximum recusion depth too large
+	if ( depth >= MAX_RECURSION_DEPTH ) {
+		std::vector<Voxel *> vox;
+		vox.push_back(new Voxel(ldown, rtop, &normx, &normy, &normz));
 
+		for ( int i = 0; i < triangles->size(); i++ )
+			vox[0]->addTriangle((*triangles)[i]);
+	}
+
+	//create 8 voxels
+	std::vector<Voxel *> vox;
 	//voxel 0
 	vox.push_back(new Voxel(ldown, &middle, &normx, &normy, &normz));
 	//voxel 1
@@ -132,7 +141,7 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 		if ( vox[i]->size() > MAX_TRIANGLES_PER_VOXEL ) {
 			std::vector<Voxel *> tmp;
 
-			buildRec(vox[i]->getTriangles(), &tmp, vox[i]->getLdown(), vox[i]->getRtop());
+			buildRec(vox[i]->getTriangles(), &tmp, vox[i]->getLdown(), vox[i]->getRtop(), depth++);
 
 			for ( unsigned int j = 0; j < tmp.size(); j++ )
 				voxels->push_back(tmp[j]);
@@ -184,21 +193,21 @@ float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *tria
 }
 
 /*################################################
+
+Checks whether a triangle intersects with the ray
+in the given distance.
+
 ################################################*/
-float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Vector *p, float dis) {
-	float tdis = dis;
+bool Octree::cutTriangles(int voxel, Vector *start, Vector *dir, float dis) {
 	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
-		Vector q;
-		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &q) ) {
-			float tmp = (*start - q).norm();
-			if ( tmp < tdis ) {
-				tdis = tmp;
-				*p = q;
-			}
+		float t;
+		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &t) ) {
+			if ( t > 0.00001f && t <= dis )
+				return true;
 		}
 	}
 
-	return dis;
+	return false;
 }
 
 /*################################################

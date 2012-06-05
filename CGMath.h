@@ -196,18 +196,18 @@ struct Triangle { //just to have all the informations of Material and
 
 Checks whether the triangle is intersected by
 the ray. Returns true if it is so and the
-intersection point.
+parameter t of the ray function.
 
 ################################################*/
-inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
+inline bool cut(Vector *start, Vector *dir, Triangle *triangle, float *t) {
 	float d;
 	if ( (d = dot(*dir, (*triangle).normal)) != 0  ) {
-		float t = dot(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
+		float t_temp = dot(((*triangle).vertices[0] - *start), (*triangle).normal) / d;
 
-		if ( t <= 0 )
+		if ( t_temp <= 0 )
 			return false;
 
-		Vector p_temp = *start + *dir * t;
+		Vector p_temp = *start + *dir * t_temp;
 		float beta = dot(p_temp, (*triangle).ubeta) + (*triangle).kbeta;
 
 		if ( beta < 0 )
@@ -221,11 +221,29 @@ inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
 		if ( (beta + gamma) > 1 )
 			return false;
 
-		(*p) = p_temp;
+		*t = t_temp;
 		return true;
 	}
 
 	return false;
+};
+
+
+/*################################################
+
+Checks whether the triangle is intersected by
+the ray. Returns true if it is so and the
+intersection point.
+
+################################################*/
+inline bool cut(Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
+	float t;
+	bool r;
+	if ( (r = cut(start, dir, triangle, &t)) ) {
+		*p = *start + *dir * t;
+	}
+
+	return r;
 };
 
 
