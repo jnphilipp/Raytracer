@@ -432,11 +432,11 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 		float r = 0.0f, g = 0.0f, b = 0.0f, a1 = 0.0f, a2 = 0.0f, a3=0.0f;
 		bool shadow = false;
 
-		if ( lights.size() >= 1 ) {
-			r += triangle.material.ambient[0] * lights[0].ambient[0];
-			g += triangle.material.ambient[1] * lights[0].ambient[1];
-			b += triangle.material.ambient[2] * lights[0].ambient[2];
-		}
+		//if ( lights.size() >= 1 ) {
+			r += triangle.material.ambient[0] * ambientLight.red()/255.0f;//lights[0].ambient[0];
+			g += triangle.material.ambient[1] * ambientLight.green()/255.0f;//lights[0].ambient[1];
+			b += triangle.material.ambient[2] * ambientLight.blue()/255.0f;//lights[0].ambient[2];
+		//}
 
 		a2 = dot(p, triangle.ubeta) + triangle.kbeta;
 		a3 = dot(p, triangle.ugamma) + triangle.kgamma;
@@ -497,7 +497,7 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 		if ( triangle.material.alpha != 1.0f ) {
 			float n = density / triangle.material.density;
 			float c1 = dot(triangle.normal, dir);
-			float c2 = sqrt(1.0f - n * n * (1.0 - c1 * c1));
+			float c2 = sqrt(1.0f - n * n * (1.0f - c1 * c1));
 			Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
 
 			QColor tr = raytrace(p, v_r, ++depth, triangle.material.density);
@@ -507,10 +507,6 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 			b = (triangle.material.density * (tr.blue()/255.0f)) + ((1.0f - triangle.material.density) * b);
 		}
 
-		r = min(1.0f, r);
-		g = min(1.0f, g);
-		b = min(1.0f, b);
-
 		if ( triangle.material.isTexture ) {
 			Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
 			int x = std::abs((int)(tex[0] * (triangle.material.texture.width() - 1))) % triangle.material.texture.width();
@@ -518,15 +514,12 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 
 			QColor tc = triangle.material.texture.pixel(x, y);
 
-			r *= tc.red();
-			g *= tc.green();
-			b *= tc.blue();
+			r *= tc.red()/255.0f;
+			g *= tc.green()/255.0f;
+			b *= tc.blue()/255.0f;
 		}
 
-		if ( triangle.material.isTexture )
-			return QColor(min((int)r%256, 255), min((int)g%256, 255), min((int)b%256, 255));
-		else
-			return QColor(min((int)(r * 255)%256, 255), min((int)(g * 255)%256, 255), min((int)(b * 255)%256, 255));
+		return QColor(min((int)(r * 255.0f), 255), min((int)(g * 255.0f), 255), min((int)(b * 255.0f), 255));
 	}
 
 	return backgroundColor;
