@@ -11,7 +11,7 @@
 #include "CGMath.h"
 #include "Octree.h"
 
-#define MAX_DEPTH 1 
+#define MAX_DEPTH 4 
 
 class Raytracer : public QGLWidget {
 	Q_OBJECT
@@ -29,7 +29,7 @@ class Raytracer : public QGLWidget {
 			void init();
 			bool initShaders();
 			void close();
-			QColor raytrace(Vector r, Vector e, int depth);
+			QColor raytrace(Vector r, Vector e, int depth, float density);
 
 			std::vector<Triangle> triangles; //the triangles in the Scene
 			std::vector<Lightsource> lights; //the lights in the scene

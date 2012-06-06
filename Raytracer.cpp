@@ -376,7 +376,7 @@ void Raytracer::genImage()
 			Vector dir = intersection - camera;
 
 			//!---------this is the call to the raytracing function------------!
-			QColor c = raytrace(camera, dir, 0);
+			QColor c = raytrace(camera, dir, 0, 1);
 			image->setPixel(i,image->height()-(j+1), QRgb(c.rgb()));
 
 		}
@@ -406,7 +406,7 @@ void Raytracer::genImage()
 
 }
 
-QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
+QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 	if ( depth >= MAX_DEPTH )
 		return QColor(0, 0, 0);
 
@@ -482,22 +482,30 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 			}
 		}
 
-		/*if ( triangle.material.sharpness != 0 ) {
-			//TODO: mirrow
-			Vector l = lights[0].position - p;
-			l.normalize();
-			Vector vmir = (n * dot(n, l) * 2) - l;
-			//Vector v_r = (n * dot(n, l) * 2) - l;
-			
-			//if ( v_r == vmir )
-			//	cout << "true";
+		//recursive reflection
+		if ( triangle.material.sharpness != 0.0f ) {
+			Vector vmir = a - (n * dot(n, a) * 2);
 
-			QColor mir = raytrace(p, vmir, depth++);
+			QColor mir = raytrace(p, vmir, ++depth, density);
 
-			r = ((1.0f - triangle.material.sharpness) * (mir.red()/255.0f)) + (triangle.material.sharpness * r);
-			g = ((1.0f - triangle.material.sharpness) * (mir.green()/255.0f)) + (triangle.material.sharpness * g);
-			b = ((1.0f - triangle.material.sharpness) * (mir.blue()/255.0f)) + (triangle.material.sharpness * b);
-		}*/
+			r = (triangle.material.sharpness * (mir.red()/255.0f)) + ((1.0f - triangle.material.sharpness) * r);
+			g = (triangle.material.sharpness * (mir.green()/255.0f)) + ((1.0f - triangle.material.sharpness) * g);
+			b = (triangle.material.sharpness * (mir.blue()/255.0f)) + ((1.0f - triangle.material.sharpness) * b);
+		}
+
+		//recursive refraction
+		if ( triangle.material.alpha != 1.0f ) {
+			float n = density / triangle.material.density;
+			float c1 = dot(triangle.normal, dir);
+			float c2 = sqrt(1.0f - n * n * (1.0 - c1 * c1));
+			Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
+
+			QColor tr = raytrace(p, v_r, ++depth, triangle.material.density);
+
+			r = (triangle.material.density * (tr.red()/255.0f)) + ((1.0f - triangle.material.density) * r);
+			g = (triangle.material.density * (tr.green()/255.0f)) + ((1.0f - triangle.material.density) * g);
+			b = (triangle.material.density * (tr.blue()/255.0f)) + ((1.0f - triangle.material.density) * b);
+		}
 
 		r = min(1.0f, r);
 		g = min(1.0f, g);
