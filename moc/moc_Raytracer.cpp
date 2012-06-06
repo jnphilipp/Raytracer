@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'Raytracer.h'
 **
-** Created: Tue Jun 5 16:42:57 2012
+** Created: Wed Jun 6 15:30:39 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!

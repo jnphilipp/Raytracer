@@ -198,11 +198,14 @@ Checks whether a triangle intersects with the ray
 in the given distance.
 
 ################################################*/
-bool Octree::cutTriangles(int voxel, Vector *start, Vector *dir, float dis) {
+bool Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, float dis) {
 	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
+		if ( (*triangle) == (*voxels[voxel]->getTriangle(i)) )
+			continue;
+
 		float t;
 		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &t) ) {
-			if ( t > 0.00001f && t <= dis )
+			if ( t >= 0 && t <= dis )
 				return true;
 		}
 	}

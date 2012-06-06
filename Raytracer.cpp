@@ -451,8 +451,6 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 		if ( dot(n, a) < 0 ) // wenn Winkel zwischen a und n > 90 Grad n invertieren
 			n.invert();
 
-		//Vector mir =
-
 		for ( unsigned int i = 0; i < lights.size(); i++ ) {
 
 			Vector l = lights[i].position - p;
@@ -464,9 +462,11 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 				float ldis = (lights[i].position - p).norm();
 
 				for ( int j = 0; j < octree->size(); j++ ) {
-					if ( octree->cutVoxel(j, &p, &l, ldis) ) {
-						shadow = octree->cutTriangles(j, &p, &l, ldis);
-					}
+					if ( octree->cutVoxel(j, &p, &l, ldis) )
+						shadow = octree->cutTriangles(j, &p, &l, &triangle, ldis);
+
+					if ( shadow )
+						break;
 				}
 
 				if ( !shadow ) {
@@ -480,16 +480,24 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth) {
 					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
 				}
 			}
-
-			/*if ( triangle.material.sharpness != 0 ) {
-				//TODO: mirrow
-				QColor mir = raytrace(p, v_r, depth++);
-				//cout << mir.red() << "\n";
-				r = ((1.0f - triangle.material.sharpness) * (mir.red()/255.0f)) + (triangle.material.sharpness * r);
-				g = ((1.0f - triangle.material.sharpness) * (mir.green()/255.0f)) + (triangle.material.sharpness * g);
-				b = ((1.0f - triangle.material.sharpness) * (mir.blue()/255.0f)) + (triangle.material.sharpness * b);
-			}*/
 		}
+
+		/*if ( triangle.material.sharpness != 0 ) {
+			//TODO: mirrow
+			Vector l = lights[0].position - p;
+			l.normalize();
+			Vector vmir = (n * dot(n, l) * 2) - l;
+			//Vector v_r = (n * dot(n, l) * 2) - l;
+			
+			//if ( v_r == vmir )
+			//	cout << "true";
+
+			QColor mir = raytrace(p, vmir, depth++);
+
+			r = ((1.0f - triangle.material.sharpness) * (mir.red()/255.0f)) + (triangle.material.sharpness * r);
+			g = ((1.0f - triangle.material.sharpness) * (mir.green()/255.0f)) + (triangle.material.sharpness * g);
+			b = ((1.0f - triangle.material.sharpness) * (mir.blue()/255.0f)) + (triangle.material.sharpness * b);
+		}*/
 
 		r = min(1.0f, r);
 		g = min(1.0f, g);

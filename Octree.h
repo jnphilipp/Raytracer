@@ -20,7 +20,7 @@ class Octree {
 		int size();
 		bool cutVoxel(int voxel, Vector *start, Vector *dir, float dis);
 		float cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, Vector *p);
-		bool cutTriangles(int voxel, Vector *start, Vector *dir, float dis);
+		bool cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, float dis);
 
 	private:
 		Vector normx;

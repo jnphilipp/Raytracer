@@ -190,6 +190,10 @@ struct Triangle { //just to have all the informations of Material and
 	Vector ugamma;
 	float kbeta;
 	float kgamma;
+
+	bool operator == ( const Triangle& t ) {
+			return  vertices[0] == t.vertices[0] && vertices[1] == t.vertices[1] && vertices[2] == t.vertices[2] && normals[0] == t.normals[0] && normals[1] == t.normals[1] && normals[2] == t.normals[2] && texCoords[0] == t.texCoords[0] && texCoords[1] == t.texCoords[1] && texCoords[2] == t.texCoords[2] && normal == t.normal && ubeta == t.ubeta && ugamma == t.ugamma && kbeta == t.kbeta && kgamma == t.kgamma;
+	}
 };
 
 /*################################################

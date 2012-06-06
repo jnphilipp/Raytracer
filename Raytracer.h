@@ -11,7 +11,7 @@
 #include "CGMath.h"
 #include "Octree.h"
 
-#define MAX_DEPTH 4
+#define MAX_DEPTH 1 
 
 class Raytracer : public QGLWidget {
 	Q_OBJECT
