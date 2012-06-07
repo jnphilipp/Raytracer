@@ -29,7 +29,8 @@ class Raytracer : public QGLWidget {
 			void init();
 			bool initShaders();
 			void close();
-			QColor raytrace(Vector r, Vector e, int depth, float density);
+			QColor raytrace(Vector r, Vector e, int depth, Triangle *etriangle, float density);
+			void color(Vector p, Vector n, Vector dir, Vector a, Triangle triangle, float a1, float a2, float a3, int depth, float density, float *cr, float *cg, float *cb);
 
 			std::vector<Triangle> triangles; //the triangles in the Scene
 			std::vector<Lightsource> lights; //the lights in the scene

@@ -376,7 +376,7 @@ void Raytracer::genImage()
 			Vector dir = intersection - camera;
 
 			//!---------this is the call to the raytracing function------------!
-			QColor c = raytrace(camera, dir, 0, 1);
+			QColor c = raytrace(camera, dir, 0, NULL, 1.0f);
 			image->setPixel(i,image->height()-(j+1), QRgb(c.rgb()));
 
 		}
@@ -406,7 +406,7 @@ void Raytracer::genImage()
 
 }
 
-QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
+QColor Raytracer::raytrace(Vector start, Vector dir, int depth, Triangle *etriangle, float density) {
 	if ( depth >= MAX_DEPTH )
 		return QColor(0, 0, 0);
 
@@ -419,7 +419,7 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 			Triangle tr;
 			Vector q;
 
-			float tmp = octree->cutTriangles(i, &start, &dir, &tr, &q);
+			float tmp = octree->cutTriangles(i, &start, &dir, etriangle, &tr, &q);
 			if ( tmp < dis ) {
 				dis = tmp;
 				triangle = tr;
@@ -430,13 +430,10 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 
 	if ( dis != FLT_MAX ) {
 		float r = 0.0f, g = 0.0f, b = 0.0f, a1 = 0.0f, a2 = 0.0f, a3=0.0f;
-		bool shadow = false;
 
-		//if ( lights.size() >= 1 ) {
-			r += triangle.material.ambient[0] * ambientLight.red()/255.0f;//lights[0].ambient[0];
-			g += triangle.material.ambient[1] * ambientLight.green()/255.0f;//lights[0].ambient[1];
-			b += triangle.material.ambient[2] * ambientLight.blue()/255.0f;//lights[0].ambient[2];
-		//}
+		r += triangle.material.ambient[0] * ambientLight.red()/255.0f;
+		g += triangle.material.ambient[1] * ambientLight.green()/255.0f;
+		b += triangle.material.ambient[2] * ambientLight.blue()/255.0f;
 
 		a2 = dot(p, triangle.ubeta) + triangle.kbeta;
 		a3 = dot(p, triangle.ugamma) + triangle.kgamma;
@@ -451,76 +448,86 @@ QColor Raytracer::raytrace(Vector start, Vector dir, int depth, float density) {
 		if ( dot(n, a) < 0 ) // wenn Winkel zwischen a und n > 90 Grad n invertieren
 			n.invert();
 
-		for ( unsigned int i = 0; i < lights.size(); i++ ) {
-
-			Vector l = lights[i].position - p;
-			l.normalize();
-
-			Vector v_r = (n * dot(n, l) * 2) - l;
-
-			if ( dot(n, l) < 0 ) {
-				float ldis = (lights[i].position - p).norm();
-
-				for ( int j = 0; j < octree->size(); j++ ) {
-					if ( octree->cutVoxel(j, &p, &l, ldis) )
-						shadow = octree->cutTriangles(j, &p, &l, &triangle, ldis);
-
-					if ( shadow )
-						break;
-				}
-
-				if ( !shadow ) {
-					float fatt = 1.0f;
-
-					if ( lights[i].constAtt != 0 && lights[i].linAtt != 0 && lights[i].quadAtt != 0 )
-						fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
-
-					r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * fabs(dot(n, l)) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
-					g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * fabs(dot(n, l)) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
-					b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
-				}
-			}
-		}
-
-		//recursive reflection
-		if ( triangle.material.sharpness != 0.0f ) {
-			Vector vmir = a - (n * dot(n, a) * 2);
-
-			QColor mir = raytrace(p, vmir, ++depth, density);
-
-			r = (triangle.material.sharpness * (mir.red()/255.0f)) + ((1.0f - triangle.material.sharpness) * r);
-			g = (triangle.material.sharpness * (mir.green()/255.0f)) + ((1.0f - triangle.material.sharpness) * g);
-			b = (triangle.material.sharpness * (mir.blue()/255.0f)) + ((1.0f - triangle.material.sharpness) * b);
-		}
-
-		//recursive refraction
-		if ( triangle.material.alpha != 1.0f ) {
-			float n = density / triangle.material.density;
-			float c1 = dot(triangle.normal, dir);
-			float c2 = sqrt(1.0f - n * n * (1.0f - c1 * c1));
-			Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
-
-			QColor tr = raytrace(p, v_r, ++depth, triangle.material.density);
-
-			r = (triangle.material.density * (tr.red()/255.0f)) + ((1.0f - triangle.material.density) * r);
-			g = (triangle.material.density * (tr.green()/255.0f)) + ((1.0f - triangle.material.density) * g);
-			b = (triangle.material.density * (tr.blue()/255.0f)) + ((1.0f - triangle.material.density) * b);
-		}
-
-		if ( triangle.material.isTexture ) {
-			Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
-			int x = std::abs((int)(tex[0] * (triangle.material.texture.width() - 1))) % triangle.material.texture.width();
-			int y = std::abs((int)((1-tex[1]) * (triangle.material.texture.height() - 1))) % triangle.material.texture.height();
-
-			QColor tc = triangle.material.texture.pixel(x, y);
-
-			r *= tc.red()/255.0f;
-			g *= tc.green()/255.0f;
-			b *= tc.blue()/255.0f;
-		}
+		color(p, n, dir, a, triangle, a1, a2, a3, depth, density, &r, &g, &b);
 
 		return QColor(min((int)(r * 255.0f), 255), min((int)(g * 255.0f), 255), min((int)(b * 255.0f), 255));
 	}
 
 	return backgroundColor;
+}
+
+void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangle, float a1, float a2, float a3, int depth, float density, float *cr, float *cg, float *cb) {
+	float r = 0.0f, g = 0.0f, b = 0.0f;
+	bool shadow = false;
+
+	for ( unsigned int i = 0; i < lights.size(); i++ ) {
+		Vector l = lights[i].position - p;
+		l.normalize();
+
+		Vector v_r = (n * dot(n, l) * 2) - l;
+
+		if ( dot(n, l) < 0 ) {
+			float ldis = (lights[i].position - p).norm();
+
+			for ( int j = 0; j < octree->size(); j++ ) {
+				if ( octree->cutVoxel(j, &p, &l, ldis) )
+					shadow = octree->cutTriangles(j, &p, &l, &triangle, ldis);
+
+				if ( shadow )
+					break;
+			}
+
+			if ( !shadow ) {
+				float fatt = 1.0f;
+
+			if ( lights[i].constAtt != 0 && lights[i].linAtt != 0 && lights[i].quadAtt != 0 )
+				fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
+
+				r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * fabs(dot(n, l)) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+				g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * fabs(dot(n, l)) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+				b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+			}
+		}
+	}
+
+	//recursive reflection
+	if ( triangle.material.sharpness != 0.0f ) {
+		Vector vmir = a - (n * dot(n, a) * 2);
+
+		QColor mir = raytrace(p, vmir, ++depth, &triangle, density);
+
+		r = (triangle.material.sharpness * (mir.red()/255.0f)) + ((1.0f - triangle.material.sharpness) * r);
+		g = (triangle.material.sharpness * (mir.green()/255.0f)) + ((1.0f - triangle.material.sharpness) * g);
+		b = (triangle.material.sharpness * (mir.blue()/255.0f)) + ((1.0f - triangle.material.sharpness) * b);
+	}
+
+	//recursive refraction
+	if ( triangle.material.alpha != 1.0f ) {
+		float n = density / triangle.material.density;
+		float c1 = dot(triangle.normal, dir);
+		float c2 = sqrt(1.0f - n * n * (1.0f - c1 * c1));
+		Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
+
+		QColor tr = raytrace(p, v_r, ++depth, &triangle, triangle.material.density);
+
+		r = (triangle.material.density * (tr.red()/255.0f)) + ((1.0f - triangle.material.density) * r);
+		g = (triangle.material.density * (tr.green()/255.0f)) + ((1.0f - triangle.material.density) * g);
+		b = (triangle.material.density * (tr.blue()/255.0f)) + ((1.0f - triangle.material.density) * b);
+	}
+
+	if ( triangle.material.isTexture ) {
+		Vector tex = triangle.texCoords[0] * a1 + triangle.texCoords[1] * a2 + triangle.texCoords[2] * a3;
+		int x = std::abs((int)(tex[0] * (triangle.material.texture.width() - 1))) % triangle.material.texture.width();
+		int y = std::abs((int)((1-tex[1]) * (triangle.material.texture.height() - 1))) % triangle.material.texture.height();
+
+		QColor tc = triangle.material.texture.pixel(x, y);
+
+		r *= tc.red()/255.0f;
+		g *= tc.green()/255.0f;
+		b *= tc.blue()/255.0f;
+	}
+
+	*cr = *cr + r;
+	*cg = *cg + g;
+	*cb = *cb + b;
 }

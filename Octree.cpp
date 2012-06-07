@@ -174,10 +174,13 @@ the start point of the ray. The intersected
 triangle and the distance will be returned.
 
 ################################################*/
-float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, Vector *p) {
+float Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *etriangle, Triangle *triangle, Vector *p) {
 	float dis = FLT_MAX;
 
 	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
+		if ( etriangle != NULL && (*etriangle) == (*voxels[voxel]->getTriangle(i)) )
+			continue;
+
 		Vector q;
 		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &q) ) {
 			float tmp = (*start - q).norm();
