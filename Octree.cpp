@@ -62,7 +62,7 @@ void Octree::buildRec(std::vector<Triangle *> *triangles, std::vector<Voxel *> *
 		std::vector<Voxel *> vox;
 		vox.push_back(new Voxel(ldown, rtop, &normx, &normy, &normz));
 
-		for ( int i = 0; i < triangles->size(); i++ )
+		for ( unsigned int i = 0; i < triangles->size(); i++ )
 			vox[0]->addTriangle((*triangles)[i]);
 	}
 
@@ -215,6 +215,32 @@ bool Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *trian
 
 	return false;
 }
+
+
+/*################################################
+################################################*/
+bool Octree::cutTriangles(int voxel, Vector *start, Vector *dir, Triangle *triangle, float dis, float *alpha) {
+	for ( int i = 0; i < voxels[voxel]->size(); i++ ) {
+		if ( (*triangle) == (*voxels[voxel]->getTriangle(i)) )
+			continue;
+
+		float t;
+		if ( cut(start, dir, voxels[voxel]->getTriangle(i), &t) ) {
+			if ( t >= 0 && t <= dis ) {
+				if ( *alpha == 0.0f )
+					return true;
+				else
+					*alpha -= voxels[voxel]->getTriangle(i)->material.alpha;
+			}
+		}
+	}
+
+	if ( *alpha > 0.0f && *alpha <= 1.0f )
+		return false;
+	else
+		return true;
+}
+
 
 /*################################################
 

@@ -468,10 +468,11 @@ void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangl
 
 		if ( dot(n, l) < 0 ) {
 			float ldis = (lights[i].position - p).norm();
+			float alpha = 1.0f;
 
 			for ( int j = 0; j < octree->size(); j++ ) {
 				if ( octree->cutVoxel(j, &p, &l, ldis) )
-					shadow = octree->cutTriangles(j, &p, &l, &triangle, ldis);
+					shadow = octree->cutTriangles(j, &p, &l, &triangle, ldis, &alpha);
 
 				if ( shadow )
 					break;
@@ -508,7 +509,7 @@ void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangl
 		float c2 = sqrt(1.0f - n * n * (1.0f - c1 * c1));
 		Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
 
-		QColor tr = raytrace(p, v_r, ++depth, &triangle, triangle.material.density);
+		QColor tr = raytrace(p, dir, ++depth, &triangle, triangle.material.density);
 
 		r = (triangle.material.density * (tr.red()/255.0f)) + ((1.0f - triangle.material.density) * r);
 		g = (triangle.material.density * (tr.green()/255.0f)) + ((1.0f - triangle.material.density) * g);
