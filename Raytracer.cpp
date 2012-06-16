@@ -504,12 +504,22 @@ void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangl
 
 	//recursive refraction
 	if ( triangle.material.alpha != 1.0f ) {
-		float n = density / triangle.material.density;
-		float c1 = dot(triangle.normal, dir);
-		float c2 = sqrt(1.0f - n * n * (1.0f - c1 * c1));
-		Vector v_r = (dir * n) + triangle.normal * (n * (-c1) - c2);
+		float d = 1.0f / triangle.material.density;
+		float theta1 = dot(n, dir);
+		float sin = d * d * (1.0f - theta1 * theta1);
 
-		QColor tr = raytrace(p, dir, ++depth, &triangle, triangle.material.density);
+		QColor tr;
+
+		if ( sin > 1 ) {
+			Vector v_r = dir - n * (2 * theta1);
+
+			tr = raytrace(p, v_r, ++depth, &triangle, 1.0f);
+		}
+		else {
+			Vector v_r = dir * d - n * (d * theta1 + sqrt(1.0f - sin));
+
+			tr = raytrace(p, v_r, ++depth, &triangle, triangle.material.density);
+		}
 
 		r = (triangle.material.density * (tr.red()/255.0f)) + ((1.0f - triangle.material.density) * r);
 		g = (triangle.material.density * (tr.green()/255.0f)) + ((1.0f - triangle.material.density) * g);
