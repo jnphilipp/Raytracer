@@ -30,9 +30,9 @@ GUI::GUI()
 	render->addAction( "Render Saved Scene", this, SLOT(render()), Qt::Key_R);
 
 	//only for now
-	//useShaders=false;
+	useShaders=false;
 	useCulling=false;
-	//scene->setUseShaders(useShaders);
+	scene->setUseShaders(useShaders);
 	statusBar()->showMessage(tr("Ready"));
 
 	setWindowTitle(QString("CGViewer"));
