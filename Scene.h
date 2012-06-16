@@ -1,14 +1,14 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-//#include "ShaderStuff.h"
+#include "ShaderStuff.h"
 #include "Model.h"
 #include "Light.h"
 #include "EditWidgets.h"
 #include "SaveSceneDialog.h"
 
-#include <GL/glu.h>
 #include <QtOpenGL>
+#include <GL/glu.h>
 
 class Scene : public QGLWidget
 {
@@ -18,7 +18,7 @@ class Scene : public QGLWidget
 		~Scene();
 
 		void addLight();
-		//void setUseShaders(bool s);
+		void setUseShaders(bool s);
 		void scaleObject(double sx, double sy, double sz);
 		void translateObject(double dx, double dy, double dz);
 		void rotateObject(double ax, double ay, double az,double angle);
@@ -59,6 +59,7 @@ class Scene : public QGLWidget
 		void setXRotation(int angle);
 		void setYRotation(int angle);
 		void setZRotation(int angle);
+		bool initShaders(std::string vs, std::string fs);
 		void drawEnvironment();
 		Vector getCameraPosition();
 		Vector getViewDirection();
@@ -88,7 +89,7 @@ class Scene : public QGLWidget
 		int selectedAxis;
 
 		//read the materials for the model
-		void readMTLFile(QString path, vector <Material> *materials, vector<Texture> *textures);
+		void readMTLFile(QString path, vector <Material> *materials);
 		//used to name the Objects (give'em an ID)
 		int nameCount;
 

@@ -18,7 +18,7 @@ class GUI : public QMainWindow
 
 	private slots:
 		void loadFile();
-		//void setShaders();
+		void setShaders();
 		void setCulling();
 		void saveScene();
 		void loadScene();
@@ -35,7 +35,8 @@ class GUI : public QMainWindow
 		Scene* scene;	
 	
 		//just for now
-		//bool useShaders;
+		bool useShaders;
+		QAction *enableShaders;
 		bool useCulling;
 }; 
 

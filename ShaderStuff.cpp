@@ -1,7 +1,9 @@
 #include "ShaderStuff.h"
 
+using namespace std;
+
 // Loading shader function
-GLhandleARB loadShader(char* filename, unsigned int type)
+GLhandleARB loadShader(const char* filename, unsigned int type)
 {
 	FILE *pfile;
 	GLhandleARB handle = 0;
@@ -20,7 +22,7 @@ GLhandleARB loadShader(char* filename, unsigned int type)
 	pfile = fopen(filename, "rb");
 	if(!pfile)
 	{
-		printf("Sorry, can't open file: '%s'.\n", filename);
+		cout<<"Sorry, can't open file: '"<<filename<<"'.\n";
 		return handle;
 	}
 	
@@ -34,7 +36,7 @@ GLhandleARB loadShader(char* filename, unsigned int type)
 	if (!handle)
 	{
 		//We have failed creating the shader object.
-		printf("Failed creating shader object from file: %s.",filename);
+		cout<<"Failed creating shader object from file: "<<filename<<".\n";
 		return handle;
 	}
 	
@@ -56,7 +58,7 @@ GLhandleARB loadShader(char* filename, unsigned int type)
 	if (!result)
 	{
 		//We failed to compile.
-		printf("Shader '%s' failed compilation.\n",filename);
+		cout<<"Shader '"<<filename<<"' failed compilation.\n";
 		
 		
 	}
@@ -70,7 +72,7 @@ GLhandleARB loadShader(char* filename, unsigned int type)
 	glGetInfoLogARB(handle, errorLoglength, &actualErrorLogLength, errorLogText);
 		
 	// Display errors.
-	printf("%s\n",errorLogText);
+	cout<<errorLogText<<endl;
 		
 	// Free the buffer malloced earlier
 	free(errorLogText);

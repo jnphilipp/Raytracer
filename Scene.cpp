@@ -23,14 +23,17 @@ Scene::Scene(QWidget *parent)
 	yCyl = gluNewQuadric();
 	zCyl = gluNewQuadric();
 
-	/*makeCurrent();
+	makeCurrent();
 	GLenum err = glewInit();
-    	if (GLEW_OK != err)
-    		cout << "Error: glewInit() failed\n";
-    	else
+	if (GLEW_OK != err)
+		cout << "Error: glewInit() failed\n";
+	else
 		cout << "Succesfully initiated GLEW\n";
-	shadersAvaiable=initShaders();
-	useShaders=shadersAvaiable;*/
+
+	shadersAvaiable = initShaders("Shaders/VertexShader.c", "Shaders/PixelShader.c");
+
+	useShaders = shadersAvaiable;
+
 	nameCount = 10;
 	show();
 	updateGL();
@@ -158,7 +161,15 @@ void Scene::initializeGL()
 
 }
 
-/*bool Scene::initShaders()
+void Scene::setUseShaders(bool u)
+{
+	useShaders = u;
+	if (useShaders) //reinit for faster debugging
+		initShaders("Shaders/VertexShader.c", "Shaders/PixelShader.c");
+	updateGL();
+}
+
+bool Scene::initShaders(string vertexShader, string fragmentShader)
 {
 	if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
 	{
@@ -174,8 +185,8 @@ void Scene::initializeGL()
 	GLhandleARB vertexShaderHandle;
 	GLhandleARB fragmentShaderHandle;
 	
-	vertexShaderHandle   = loadShader((char*)"Shaders/PhongShader_vert.c",GL_VERTEX_SHADER);
-	fragmentShaderHandle = loadShader((char*)"Shaders/PhongShader_frag.c",GL_FRAGMENT_SHADER);
+	vertexShaderHandle   = loadShader(vertexShader.c_str(), GL_VERTEX_SHADER);
+	fragmentShaderHandle = loadShader(fragmentShader.c_str(), GL_FRAGMENT_SHADER);
 
 	if (vertexShaderHandle == 0 || fragmentShaderHandle == 0)
 		return false;
@@ -188,7 +199,7 @@ void Scene::initializeGL()
 
 	return true;
 	
-}*/
+}
 
 
 void Scene::resizeGL(int w, int h)
@@ -342,7 +353,7 @@ void Scene::mouseMoveEvent(QMouseEvent *event)
 				if (selectedAxis == 3) //Z
 				{
 					Vector transZ = m*Vector(0.0, 0.0, 1.0, 1.0);
-					lights[n]->translate(transZ(0), transZ(1), -(float)dx*0.01*transZ(2));
+					lights[n]->translate(transZ(0), transZ(1), -(float)(dx+dy)*0.01*transZ(2));
 				}
 			}
 		}
@@ -589,7 +600,6 @@ bool Scene::readOBJFile(QString fileName)
 	vector<Mesh> meshes;
 	vector<Material> materials;
 	vector<Vector> tex_coords;
-	vector<Texture> textures;
 	while (!file.eof())
 	{
 		string s;
@@ -603,7 +613,7 @@ bool Scene::readOBJFile(QString fileName)
 			path = fileName;
 			path.chop(fileName.length()-fileName.lastIndexOf("/"));
 			path.append(QString("/%1").arg(QString(m_fn.c_str())));
-			readMTLFile(path, &materials, &textures);
+			readMTLFile(path, &materials);
 		}
 		//vertex
 		if (s.compare("v") == 0)
@@ -728,12 +738,13 @@ bool Scene::readOBJFile(QString fileName)
 		if (ret == QMessageBox::Cancel)
 			return false;
 	}
-	Model *m = new Model(nameCount, vectors, faces, normals, meshes, materials, tex_coords, textures);
+	Model *m = new Model(nameCount, vectors, faces, normals, meshes, materials, tex_coords);
 	models.push_back(m);
 	++nameCount;
 	updateGL();
 	cout<<"New Model: \n";
 	cout<<materials.size()<<" Materials "<<meshes.size()<<" Meshes "<<vectors.size()<<" Vertices, "<<faces.size()<<" Faces "<<normals.size()<<" Normals "<<tex_coords.size()<<" TexCoords\n";
+	
 	int oldIndex = selectedObject;
 	selectedObject = nameCount-1;
 	rotateObject( 1.f, 0.f, 0.f, -90.0 );
@@ -741,7 +752,7 @@ bool Scene::readOBJFile(QString fileName)
 	return true;
 }
 
-void Scene::readMTLFile(QString fileName, vector <Material> *materials, vector<Texture> *textures)
+void Scene::readMTLFile(QString fileName, vector <Material> *materials)
 {
 	//vector <Material> materials;
 	ifstream file;
@@ -777,6 +788,7 @@ void Scene::readMTLFile(QString fileName, vector <Material> *materials, vector<T
 			m.sharpness = 0.0;
 			m.density = 1.0;
 			m.isTexture = false;
+			m.hasNormalMap = false;
 			materials->push_back(m);
 		}
 		if (s.compare("Ns")==0)
@@ -839,32 +851,63 @@ void Scene::readMTLFile(QString fileName, vector <Material> *materials, vector<T
 		{
 			string tex_name;
 			file>>tex_name;
-			QImage *texture=NULL;
+			QImage *texture = NULL;
 			QString path; //path in were the
 			path = fileName;
 			path.chop(fileName.length()-fileName.lastIndexOf("/"));
 			path.append(QString("/%1").arg(QString(tex_name.c_str())));
-			texture=new QImage(QString(path));
+			texture = new QImage(QString(path));
 			if(!texture->isNull())
 			{
-				QImage texImage=QGLWidget::convertToGLFormat(*texture);
-				Texture t;
+				QImage texImage = QGLWidget::convertToGLFormat(*texture);
 				GLuint tex;
 				glGenTextures( 1, &tex );
 				glBindTexture( GL_TEXTURE_2D, tex );
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);	// Linear Filtering
 				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );  //DECAL
 				if (texImage.hasAlphaChannel())
 					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.bits());
 				else
 					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.bits());
-				materials->back().isTexture=true;
-				t.name = tex_name;
-				t.texID=tex;
-				t.texture = texImage;
-				textures->push_back(t);
-				materials->back().tex_id=textures->size()-1;
+				materials->back().isTexture = true;
+				materials->back().texName = tex_name;
+				materials->back().tex_id = tex;
+				materials->back().texture = texImage;
+			}
+			//else
+			//	QMessageBox::warning(this, tr("Texture Loader"), QString("Texture %1\ncouldn't be loaded!").arg(path),QMessageBox::Ok);	
+			texture->~QImage();
+			texture=NULL;
+		}
+		//normal maps
+		if (s.compare("map_bump")==0 || s.compare("bump")==0)
+		{
+			string bump_name;
+			file>>bump_name;
+			QImage *texture = NULL;
+			QString path; //path in were the
+			path = fileName;
+			path.chop(fileName.length()-fileName.lastIndexOf("/"));
+			path.append(QString("/%1").arg(QString(bump_name.c_str())));
+			texture = new QImage(QString(path));
+			if(!texture->isNull())
+			{
+				QImage texImage = QGLWidget::convertToGLFormat(*texture);
+				GLuint tex;
+				glGenTextures( 1, &tex );
+				glBindTexture( GL_TEXTURE_2D, tex );
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );  //DECAL
+				if (texImage.hasAlphaChannel())
+					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.bits());
+				else
+					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.bits());
+				materials->back().hasNormalMap = true;
+				materials->back().normalMapName = bump_name;
+				materials->back().normalMap_id = tex;
+				materials->back().normalMap = texImage;
 			}
 			//else
 			//	QMessageBox::warning(this, tr("Texture Loader"), QString("Texture %1\ncouldn't be loaded!").arg(path),QMessageBox::Ok);	
@@ -951,29 +994,48 @@ void Scene::saveScene(QString path, Parameters p)
 			file<<m.diffuse[0]<<" "<<m.diffuse[1]<<" "<<m.diffuse[2]<<" ";
 			file<<m.specular[0]<<" "<<m.specular[1]<<" "<<m.specular[2]<<" ";
 			file<<m.shininess<<" "<<m.alpha<<" "<<m.sharpness<<" "<<m.density<<" ";
-			if (m.isTexture)
+			if (m.isTexture && !m.hasNormalMap)
 			{
-				file<<"1 "<<models[i]->textures[m.tex_id].name<<endl;
-				//copy textures in the path
+				file<<"1 "<<m.texName<<endl;
+			}
+			else if (m.isTexture && m.hasNormalMap)
+			{
+				file<<"2 "<<m.texName<<" "<<m.normalMapName<<endl;
+			}
+			else
+				file<<"0"<<endl;
+			if (m.isTexture) //copy textures in the path
+			{
 				QString texpath = path;
 				texpath.chop(path.length()-path.lastIndexOf("/"));
-				texpath.append(QString("/%1").arg(models[i]->textures[m.tex_id].name.c_str()));
+				texpath.append(QString("/%1").arg(m.texName.c_str()));
 				cout<<texpath.toStdString()<<endl;
 				//the image is saved wrong -> convert
-				QImage tempImage = models[i]->textures[m.tex_id].texture.mirrored();
+				QImage tempImage = m.texture.mirrored();
 				tempImage = tempImage.rgbSwapped();
 				if (!tempImage.save(texpath))
 					QMessageBox::warning(this, tr("Save Image"), tr("Couldn't save image.\nTry to copy it manually to the destination path"),QMessageBox::Ok);					
 			}
-			else
-				file<<"0"<<endl;			
+			if (m.hasNormalMap) //copy normal map in the path (heavy code duplicates TODO: change that)
+			{
+				QString texpath = path;
+				texpath.chop(path.length()-path.lastIndexOf("/"));
+				texpath.append(QString("/%1").arg(m.normalMapName.c_str()));
+				cout<<texpath.toStdString()<<endl;
+				//the image is saved wrong -> convert
+				QImage tempImage = m.texture.mirrored();
+				tempImage = tempImage.rgbSwapped();
+				if (!tempImage.save(texpath))
+					QMessageBox::warning(this, tr("Save Image"), tr("Couldn't save normalmap.\nTry to copy it manually to the destination path"),QMessageBox::Ok);					
+			}
+						
 		}
 	}
 	file<<endl;
 	//3rd: List of vertices
 	for (size_t i=0;i<models.size();++i)
 	{
-		for (uint j=0;j<models[i]->vectors.size();++j)
+		for (size_t j=0;j<models[i]->vectors.size();++j)
 		{
 			Vector v = models[i]->vectors[j];
 			v = models[i]->trafoMatrix*v; //apply the transformations
@@ -1090,7 +1152,7 @@ void Scene::loadPrimitive(QString path)
 	vector<Mesh> meshes;
 	vector<Material> materials;
 	vector<Vector> tex_coords;
-	vector<Texture> textures;
+	
 
 	size_t nLights = 0, nMat = 0, nVert = 0, nNorm = 0, nTexCoords = 0, nFaces = 0;
 
@@ -1154,8 +1216,8 @@ void Scene::loadPrimitive(QString path)
 		file>>density;
 		mat.density=density;
 		file>>isTexture;
-		mat.isTexture=false;
-		if (isTexture == 1) //load texture
+		mat.isTexture = false;
+		if (isTexture > 0) //load texture
 		{
 			string texName;
 			file>>texName;
@@ -1176,23 +1238,61 @@ void Scene::loadPrimitive(QString path)
 			if(!texture.isNull())
 			{
 				QImage texImage=QGLWidget::convertToGLFormat(texture);
-				Texture t;
 				GLuint tex;
 				glGenTextures( 1, &tex );
 				glBindTexture( GL_TEXTURE_2D, tex );
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );  //DECAL
 				if (texImage.hasAlphaChannel())
 					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.bits());
 				else
 					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.bits());
-				mat.isTexture=true;
-				t.name = mat.name = texName;
-				t.texID=tex;
-				t.texture = texImage;
-				textures.push_back(t);
-				mat.tex_id=textures.size()-1;
+				mat.isTexture = true;
+				mat.texName = texName;
+				mat.tex_id = tex;
+				mat.texture = texImage;
+			}			
+		}
+		if (isTexture == 2) //load normalö map (heavy code duplicates TODO: change that)
+		{
+			string bumpName;
+			file>>bumpName;
+			cout<<"Normal Map: "<<bumpName<<endl;
+			QString filepath; //path in were the
+			filepath = path;
+			filepath.chop(path.length()-path.lastIndexOf("/"));
+			filepath.append(QString("/%1").arg(QString(bumpName.c_str())));
+			QImage texture(filepath);
+			if (texture.isNull()) //try the "textures" sub directory
+			{
+				filepath = path;
+				filepath.chop(path.length()-path.lastIndexOf("/"));
+				filepath.append(QString("/textures/%1").arg(QString(bumpName.c_str())));
+				//cout<<".....failed: try Texture: "<<filepath.toStdString()<<endl;
+				texture = QImage(filepath);
+			}
+			if(!texture.isNull())
+			{
+				QImage texImage=QGLWidget::convertToGLFormat(texture);
+				GLuint tex;
+				glGenTextures( 1, &tex );
+				glBindTexture( GL_TEXTURE_2D, tex );
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	// Linear Filtering
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );  //DECAL
+				if (texImage.hasAlphaChannel())
+					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.bits());
+				else
+					glTexImage2D(GL_TEXTURE_2D, 0, 4, texImage.width(), texImage.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, texImage.bits());
+				mat.hasNormalMap = true;
+				mat.normalMapName = bumpName;
+				mat.normalMap_id = tex;
+				mat.normalMap = texImage;
 			}			
 		}
 		materials.push_back(mat);
@@ -1243,7 +1343,7 @@ void Scene::loadPrimitive(QString path)
 	}
 
 
-	Model *m = new Model(nameCount, vectors, faces, normals, meshes, materials, tex_coords, textures);
+	Model *m = new Model(nameCount, vectors, faces, normals, meshes, materials, tex_coords);
 	models.push_back(m);
 	++nameCount;
 	cout<<"New Model: \n";
@@ -1444,13 +1544,36 @@ void Scene::paintGL()
 			glLightfv(GL_LIGHT0+i, GL_POSITION, (lights[i]->getTransformations()*Vector(0,0,0)).getValues());
 		}
 	}
+
+	if (useShaders)
+	{
+		glUseProgramObjectARB(phongShaderId);
+		int size = lights.size();
+		if (size == 0) //the standard light (camera) is on
+			size = 1;
+		glUniform1iARB(glGetUniformLocationARB(phongShaderId,"numLights"), size);
+		glUniform1iARB(glGetUniformLocationARB(phongShaderId,"basemap"), 0);
+		glUniform1iARB(glGetUniformLocationARB(phongShaderId,"normalmap"), 1);
+		//uniform sampler2D basemap;
+		//uniform sampler2D normalmap;
+	}
 			
 	for (uint i=0; i<models.size(); ++i)
 	{
+		/*if (useShaders)
+		{
+			if (selectedObject==models[i]->getName())
+				glUniform1iARB(glGetUniformLocationARB(phongShaderId,"isSelected"), true);
+			else
+				glUniform1iARB(glGetUniformLocationARB(phongShaderId,"isSelected"), false);
+		}*/
 		glPushName(models[i]->getName());
 		models[i]->draw(selectedObject);
 		glPopName();
 	}
+
+	if (useShaders)
+		glUseProgramObjectARB(0);
 	
 	glPopMatrix();
 

@@ -10,9 +10,7 @@
 #include <GL/glew.h>
 #include <GL/glext.h>
 
-using namespace std;
-
 // Loading shader function
-GLhandleARB loadShader(char* filename, unsigned int type);
+GLhandleARB loadShader(const char* filename, unsigned int type);
 
 #endif

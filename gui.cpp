@@ -21,6 +21,7 @@ GUI::GUI()
 	options->addAction( "Translate Object", this, SLOT(translate()));
 	options->addAction( "Rotate Object", this, SLOT(rotate()));
 	options->addAction( "Delete Object", this, SLOT(deleteObject()));
+	enableShaders = options->addAction( "Enable Shader", this, SLOT(setShaders()), Qt::CTRL+Qt::Key_M );
  	//options->addAction( "Change RenderMode", this, SLOT(setShaders()), Qt::CTRL+Qt::Key_M );
 	options->addAction( "Enable/Disable Backface Culling", this, SLOT(setCulling()), Qt::CTRL+Qt::Key_B );
 
@@ -54,11 +55,15 @@ void GUI::loadFile()
 }
 
 
-/*void GUI::setShaders()
+void GUI::setShaders()
 {
 	useShaders=!useShaders;
+	if (useShaders)
+		enableShaders->setText(QString("Disable Shader"));
+	else
+		enableShaders->setText(QString("Enable Shader"));
 	scene->setUseShaders(useShaders);
-}*/
+}
 
 void GUI::setCulling()
 {

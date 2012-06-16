@@ -12,7 +12,7 @@ class Model
 {
 	public:
 		/*! \brief Creates model with the given attributes*/
-		Model(int name, vector<Vector> vectors, vector<Face> faces, vector<Vector> normals, vector<Mesh> meshes, vector<Material> materials, vector<Vector> tex_coords, vector<Texture> textures);
+		Model(int name, vector<Vector> vectors, vector<Face> faces, vector<Vector> normals, vector<Mesh> meshes, vector<Material> materials, vector<Vector> tex_coords);
 		~Model();
 		
 
@@ -30,7 +30,6 @@ class Model
 
 		void draw(int selectedName);
 
-		vector<Texture> textures;
 		vector<Mesh> meshes;
 		vector<Face> faces;
 		vector<Material> materials;

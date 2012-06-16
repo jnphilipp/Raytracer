@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'gui.h'
 **
-** Created: Thu Jun 7 16:17:31 2012
+** Created: Sat Jun 16 16:20:00 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_GUI[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-      11,   14, // methods
+      12,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -34,23 +34,24 @@ static const uint qt_meta_data_GUI[] = {
        5,    4,    4,    4, 0x08,
       16,    4,    4,    4, 0x08,
       29,    4,    4,    4, 0x08,
-      41,    4,    4,    4, 0x08,
-      53,    4,    4,    4, 0x08,
-      64,    4,    4,    4, 0x08,
-      72,    4,    4,    4, 0x08,
-      84,    4,    4,    4, 0x08,
-      93,    4,    4,    4, 0x08,
-     108,    4,    4,    4, 0x08,
-     117,    4,    4,    4, 0x08,
+      42,    4,    4,    4, 0x08,
+      54,    4,    4,    4, 0x08,
+      66,    4,    4,    4, 0x08,
+      77,    4,    4,    4, 0x08,
+      85,    4,    4,    4, 0x08,
+      97,    4,    4,    4, 0x08,
+     106,    4,    4,    4, 0x08,
+     121,    4,    4,    4, 0x08,
+     130,    4,    4,    4, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_GUI[] = {
-    "GUI\0\0loadFile()\0setCulling()\0saveScene()\0"
-    "loadScene()\0addLight()\0scale()\0"
-    "translate()\0rotate()\0deleteObject()\0"
-    "render()\0quit()\0"
+    "GUI\0\0loadFile()\0setShaders()\0setCulling()\0"
+    "saveScene()\0loadScene()\0addLight()\0"
+    "scale()\0translate()\0rotate()\0"
+    "deleteObject()\0render()\0quit()\0"
 };
 
 void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -60,16 +61,17 @@ void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **
         GUI *_t = static_cast<GUI *>(_o);
         switch (_id) {
         case 0: _t->loadFile(); break;
-        case 1: _t->setCulling(); break;
-        case 2: _t->saveScene(); break;
-        case 3: _t->loadScene(); break;
-        case 4: _t->addLight(); break;
-        case 5: _t->scale(); break;
-        case 6: _t->translate(); break;
-        case 7: _t->rotate(); break;
-        case 8: _t->deleteObject(); break;
-        case 9: _t->render(); break;
-        case 10: _t->quit(); break;
+        case 1: _t->setShaders(); break;
+        case 2: _t->setCulling(); break;
+        case 3: _t->saveScene(); break;
+        case 4: _t->loadScene(); break;
+        case 5: _t->addLight(); break;
+        case 6: _t->scale(); break;
+        case 7: _t->translate(); break;
+        case 8: _t->rotate(); break;
+        case 9: _t->deleteObject(); break;
+        case 10: _t->render(); break;
+        case 11: _t->quit(); break;
         default: ;
         }
     }
@@ -108,9 +110,9 @@ int GUI::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 11)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 11;
+        _id -= 12;
     }
     return _id;
 }

@@ -1,10 +1,10 @@
+#include <GL/glew.h>
 #include "Model.h"
 
 
-Model::Model(int name, vector<Vector> vectors, vector<Face> faces, vector<Vector> normals, vector<Mesh> meshes, vector<Material> materials, vector<Vector> tex_coords, vector<Texture> textures)
+Model::Model(int name, vector<Vector> vectors, vector<Face> faces, vector<Vector> normals, vector<Mesh> meshes, vector<Material> materials, vector<Vector> tex_coords)
 {
 	this->name = name;
-	this->textures = textures;
 	this->meshes = meshes;
 	this->faces = faces;
 	this->materials = materials;
@@ -23,13 +23,13 @@ int Model::getName()
 
 Model::~Model()
 {
-	for (unsigned int i=0;i<textures.size();++i)
+	for (unsigned int i=0;i<materials.size();++i)
 	{
-		glDeleteTextures( 1, &(textures[i].texID) );
+		if (materials[i].isTexture)
+			glDeleteTextures( 1, &(materials[i].tex_id) );
 		//delete[] textures[i].data;
 	}
 	glDeleteLists(displayList,1);
-	textures.clear();
 	meshes.clear();
 	faces.clear();
 	materials.clear();
@@ -196,8 +196,13 @@ void Model::initDisplayLists()
 			if (materials[meshes[i].material].isTexture)
 			{
 				glEnable(GL_TEXTURE_2D);
-				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-				glBindTexture(GL_TEXTURE_2D, textures[materials[meshes[i].material].tex_id].texID);
+				glActiveTextureARB(GL_TEXTURE0_ARB);
+				glBindTexture(GL_TEXTURE_2D, materials[meshes[i].material].tex_id);
+				if (materials[meshes[i].material].hasNormalMap)
+				{
+					glActiveTextureARB(GL_TEXTURE1_ARB);
+					glBindTexture(GL_TEXTURE_2D, materials[meshes[i].material].tex_id);
+				}
 			}				
 			for (unsigned int j=0;j<meshes[i].faces.size();++j)
 			{
@@ -206,14 +211,22 @@ void Model::initDisplayLists()
 				{
 					if (!normals.empty()>0) //just prevents a crash but looks pretty ugly
 						glNormal3fv(normals[faces[meshes[i].faces[j]].normals[k]].getValues() );
+					else //use plane normal
+					{
+						Vector v1 = vectors[faces[meshes[i].faces[j]].vectors[0]];
+						Vector v2 = vectors[faces[meshes[i].faces[j]].vectors[1]];
+						Vector v3 = vectors[faces[meshes[i].faces[j]].vectors[2]];
+						glNormal3fv(crossProduct( (v2 - v1), (v3 - v1) ).getValues() );
+					}
 					if (materials[meshes[i].material].isTexture)
 						glTexCoord2f(tex_coords[faces[meshes[i].faces[j]].tex_coords[k]](0), tex_coords[faces[meshes[i].faces[j]].tex_coords[k]](1));
 					else
-						glTexCoord2f(0.0,0.0);
+						glTexCoord2f(-1.0,-1.0);
 					glVertex3fv( (vectors[faces[meshes[i].faces[j]].vectors[k]]).getValues() );
 				}
 				glEnd();
 			}
+			glActiveTextureARB(GL_TEXTURE0_ARB);
 		}				
 	}
 
@@ -225,10 +238,10 @@ void Model::initDisplayLists()
 		{
 			glDisable(GL_COLOR_MATERIAL);
 			glEnable(GL_BLEND);		// Turn Blending On
-			//Note: we need different blend functions for textures and pure materials
+			//TODO: we need different blend functions for textures and pure materials
 			//because textures are translucent only at some parts
-			//whereas a translucent material everywhere translucent is
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+			//whereas a translucent material is translucent everywhere 
+			glBlendFunc (GL_DST_COLOR, GL_SRC_COLOR);
 			glDisable(GL_TEXTURE_2D);
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, materials[meshes[i].material].ambient );
 			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materials[meshes[i].material].diffuse);
@@ -236,10 +249,14 @@ void Model::initDisplayLists()
 			glMaterialf(GL_FRONT, GL_SHININESS, materials[meshes[i].material].shininess );
 			if (materials[meshes[i].material].isTexture)
 			{
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				glEnable(GL_TEXTURE_2D);
-				glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-				glBindTexture(GL_TEXTURE_2D, textures[materials[meshes[i].material].tex_id].texID);
+				glActiveTextureARB(GL_TEXTURE0_ARB);
+				glBindTexture(GL_TEXTURE_2D, materials[meshes[i].material].tex_id);
+				if (materials[meshes[i].material].hasNormalMap)
+				{
+					glActiveTextureARB(GL_TEXTURE1_ARB);
+					glBindTexture(GL_TEXTURE_2D, materials[meshes[i].material].tex_id);
+				}
 			}
 								
 			for (unsigned int j=0;j<meshes[i].faces.size();++j)
@@ -249,16 +266,25 @@ void Model::initDisplayLists()
 				{
 					if (!normals.empty()) //just prevents a crash but looks pretty ugly
 						glNormal3fv(normals[faces[meshes[i].faces[j]].normals[k]].getValues() );
+					else
+					{
+						Vector v1 = vectors[faces[meshes[i].faces[j]].vectors[0]];
+						Vector v2 = vectors[faces[meshes[i].faces[j]].vectors[1]];
+						Vector v3 = vectors[faces[meshes[i].faces[j]].vectors[2]];
+						glNormal3fv(crossProduct( (v2 - v1), (v3 - v1) ).getValues() );
+					}
 					if (materials[meshes[i].material].isTexture)
 						glTexCoord2f(tex_coords[faces[meshes[i].faces[j]].tex_coords[k]](0),tex_coords[faces[meshes[i].faces[j]].tex_coords[k]](1));
 					else
-						glTexCoord2f(0.0,0.0);
+						glTexCoord2f(-1.0,-1.0);
 					glVertex3fv( (vectors[faces[meshes[i].faces[j]].vectors[k]]).getValues() );
 				}
 				glEnd();
-			}				
+			}
+			glActiveTextureARB(GL_TEXTURE0_ARB);				
 		}
 	}
+	
 	
 	glEndList();
 
@@ -286,6 +312,7 @@ void Model::initDisplayLists()
 			{
 				if (!normals.empty()) //just prevents a crash but looks pretty ugly
 					glNormal3fv(normals[faces[meshes[i].faces[j]].normals[k]].getValues() );
+				glTexCoord2f(-1.0,-1.0);
 				glVertex3fv( (vectors[faces[meshes[i].faces[j]].vectors[k]]).getValues() );
 			}
 			glEnd();
@@ -304,11 +331,10 @@ bool Model::isTransparent(Material material)
 	else
 		if (material.isTexture)
 		{
-			uint id = material.tex_id;
-			if (!textures[id].texture.hasAlphaChannel()) //no alpha channel
+			if (!material.texture.hasAlphaChannel()) //no alpha channel
 				return false;
 			//check if alphaChannel has somewhere a value less than 1.0 (255)
-			QImage alphaChannel = textures[id].texture.alphaChannel();
+			QImage alphaChannel = material.texture.alphaChannel();
 			for (int i=0;i<alphaChannel.width();++i)
 				for (int j=0;j<alphaChannel.height();++j)
 				{

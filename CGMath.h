@@ -9,6 +9,9 @@
 #include <QtGui>
 #include <QtOpenGL>
 
+#include <pmmintrin.h>
+#include <malloc.h>
+
 
 class Vector {
 	public:
@@ -167,6 +170,7 @@ struct Lightsource {
 };
 
 struct Material {
+	std::string name;
 	float ambient[4];
 	float diffuse[4];
 	float specular[4];
@@ -176,8 +180,13 @@ struct Material {
 	float density; //index of refraction i.e. how does the light bend when going through an object (1.0 means no bending)
 	bool isTexture;
 	unsigned int tex_id;
-	std::string name;
+	std::string texName;
 	QImage texture;
+	//normal map
+	bool hasNormalMap;
+	unsigned int normalMap_id;
+	std::string normalMapName;
+	QImage normalMap;
 };
 
 struct Triangle { //just to have all the informations of Material and
