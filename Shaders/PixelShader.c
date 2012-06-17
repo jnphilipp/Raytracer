@@ -1,39 +1,25 @@
 uniform sampler2D colorMap;
-varying vec3 normal, lightDir, eyeVec;
+uniform int numLights;
+varying vec3 normal, vertex, eyeVec;
 
-void main (void) {
-	vec4 final_color = (gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient) + (gl_LightSource[0].ambient * gl_FrontMaterial.ambient);
-
+void main() {
+	vec4 color = gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient;
 	vec3 N = normalize(normal);
-	vec3 L = normalize(lightDir);
+	vec3 E = normalize(eyeVec);
 
-	float lambertTerm = dot(N,L);
+	for (int l=0; l<numLights; ++l) {
+		vec3 L = normalize(gl_LightSource[l].position.xyz - vertex);
 
-	if(lambertTerm > 0.0) {
-		final_color += gl_LightSource[0].diffuse * gl_FrontMaterial.diffuse * lambertTerm;
+		if ( dot(N, L) > 0.0f ) {
+			vec3 R = reflect(-L, N);
+			float shin = 1.0f;
+			//float shin = pow(max(dot(R, E), 0.0f), gl_FrontMaterial.shininess);
 
-		vec3 E = normalize(eyeVec);
-		vec3 R = reflect(-L, N);
-		float specular = pow( max(dot(R, E), 0.0), gl_FrontMaterial.shininess);
-		final_color += gl_LightSource[0].specular * gl_FrontMaterial.specular * specular;
-	}
-
-	gl_FragColor = final_color * texture2D( colorMap, gl_TexCoord[0].st);
-}
-
-/*uniform int numLights;
-varying vec3 normal, vertex;
-
-void main()
-{
-	vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-	for (int l=0; l<numLights; ++l)
-	{
-		vec3 lightPosition = gl_LightSource[l].position.xyz;
-		color.r += dot (normal, lightPosition - vertex);
-		color.g += dot (normal, lightPosition - vertex);
-		color.b += dot (normal, lightPosition - vertex);
+			color.r += dot(N, L) * gl_LightSource[l].diffuse.r * gl_FrontMaterial.diffuse.r + gl_LightSource[l].specular.r * gl_FrontMaterial.specular.r * shin;
+			color.g += dot(N, L) * gl_LightSource[l].diffuse.g * gl_FrontMaterial.diffuse.g + gl_LightSource[l].specular.g * gl_FrontMaterial.specular.g * shin;
+			color.b += dot(N, L) * gl_LightSource[l].diffuse.b * gl_FrontMaterial.diffuse.b + gl_LightSource[l].specular.b * gl_FrontMaterial.specular.b * shin;
+		}
 	}
 	
-	gl_FragColor = color;
-}*/
+	gl_FragColor = color * texture2D(colorMap, gl_TexCoord[0].st);
+}
