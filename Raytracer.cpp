@@ -484,9 +484,9 @@ void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangl
 			if ( lights[i].constAtt != 0 && lights[i].linAtt != 0 && lights[i].quadAtt != 0 )
 				fatt = 1.0f / (lights[i].constAtt + lights[i].linAtt * l.norm() + lights[i].quadAtt * l.norm() * l.norm());
 
-				r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * fabs(dot(n, l)) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
-				g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * fabs(dot(n, l)) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
-				b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess));
+				r += fatt * (lights[i].diffuse[0] * triangle.material.diffuse[0] * fabs(dot(n, l)) + lights[i].specular[0] * triangle.material.specular[0] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess)) * alpha;
+				g += fatt * (lights[i].diffuse[1] * triangle.material.diffuse[1] * fabs(dot(n, l)) + lights[i].specular[1] * triangle.material.specular[1] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess)) * alpha;
+				b += fatt * (lights[i].diffuse[2] * triangle.material.diffuse[2] * fabs(dot(n, l)) + lights[i].specular[2] * triangle.material.specular[2] * pow(max(0.0f, (float)fabs(scalarProduct(a, v_r))), triangle.material.shininess)) * alpha;
 			}
 		}
 	}
@@ -510,13 +510,13 @@ void Raytracer::color(Vector p, Vector n, Vector dir, Vector a, Triangle triangl
 
 		QColor tr;
 
-		if ( sin > 1 ) {
-			Vector v_r = dir - n * (2 * theta1);
+		if ( sin > 1.0f ) {
+			Vector v_r = dir - (n * theta1 * 2.0f);
 
 			tr = raytrace(p, v_r, ++depth, &triangle, 1.0f);
 		}
 		else {
-			Vector v_r = dir * d - n * (d * theta1 + sqrt(1.0f - sin));
+			Vector v_r = (dir * d) - (n * (d - sqrt(1.0f - sin)));
 
 			tr = raytrace(p, v_r, ++depth, &triangle, triangle.material.density);
 		}
