@@ -3,7 +3,7 @@ uniform int numLights;
 varying vec3 normal, vertex, eyeVec;
 
 void main() {
-	vec4 color = gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient;
+	vec4 color = gl_FrontLightModelProduct.sceneColor;
 	vec3 N = normalize(normal);
 	vec3 E = normalize(eyeVec);
 
@@ -12,7 +12,7 @@ void main() {
 
 		if ( dot(N, L) > 0.0 ) {
 			vec3 R = reflect(-L, N);
-			float shin = (gl_FrontMaterial.shininess == 0.0 ? 0.0 : pow(max(dot(R, E), 0.0), gl_FrontMaterial.shininess));
+			float shin = pow(max(dot(R, E), 0.0), gl_FrontMaterial.shininess);
 			float fatt = gl_LightSource[l].constantAttenuation + gl_LightSource[l].linearAttenuation * length(L) + gl_LightSource[l].quadraticAttenuation * length(L) * length(L);
 
 			if ( fatt != 0.0 )
