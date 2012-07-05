@@ -54,6 +54,18 @@ give every triangle a specific color. Then to
 optimize the intersection by dividing the image
 into parts an add the triangle to these parts.
 
+The second task is to implement the Phong
+reflection model and also texturing.
+
+The third task is to implement reflection and
+refraction.
+
+The fourth task is to implement the Phong
+reflection model with GLSL (shader programming).
+
+The fifth task is to implement normal mapping and
+Toon shader with GLSL.
+
 
 VII.   About
 ==================================================
